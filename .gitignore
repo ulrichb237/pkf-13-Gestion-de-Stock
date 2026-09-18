@@ -5,3 +5,6 @@
 .idea/
 .vscode/
 *.iml
+
+# Brainstorming visual companion (superpowers)
+.superpowers/
