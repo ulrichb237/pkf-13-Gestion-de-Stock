@@ -33,4 +33,20 @@ export default defineConfig([
       ],
     },
   },
+  {
+    // Primitifs generes par `npx shadcn add` (Task 3). Ce sont des fichiers
+    // vendored/CLI-owned, pas du code applicatif ecrit a la main : le gate
+    // "pas de valeur arbitraire" (Global Constraint) cible l'espacement
+    // hardcode en dehors de la grille 4px dans le code applicatif, pas les
+    // classes generees par shadcn (ex. `rounded-[min(var(--radius-md),10px)]`,
+    // `color-mix(...)`) qui restent pilotees par les tokens du theme.
+    // Le pattern shadcn (export du composant + de ses `*Variants` cva depuis
+    // le meme fichier) declenche aussi `react-refresh/only-export-components`,
+    // qui ne s'applique pas a ces fichiers non hot-reloades individuellement.
+    files: ['src/components/ui/**/*.{ts,tsx}'],
+    rules: {
+      'tailwindcss/no-arbitrary-value': 'off',
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])

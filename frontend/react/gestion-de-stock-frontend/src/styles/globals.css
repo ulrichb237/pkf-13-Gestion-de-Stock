@@ -1,4 +1,28 @@
 @import "tailwindcss";
+/*
+ * Additions genuinement additives issues de `npx shadcn init` (Task 3) :
+ *   - `tw-animate-css` fournit les utilitaires `animate-in`/`fade-in`/
+ *     `zoom-in`/... utilises par les primitifs a etats (dialog, sheet,
+ *     dropdown-menu, tabs...).
+ *   - `shadcn/tailwind.css` fournit les `@custom-variant` (`data-open`,
+ *     `data-checked`, etc.) que ces memes primitifs generes referencent
+ *     dans leurs classes. Sans cet import, ces variantes ne generent
+ *     aucun CSS et les primitifs perdent leurs etats visuels.
+ * Ni l'un ni l'autre ne redefinit de couleur : la palette Console Pro
+ * ci-dessous reste la seule source de verite.
+ */
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+/*
+ * `@custom-variant dark` bascule le prefixe `dark:` (utilise nativement par
+ * les primitifs shadcn generes, ex. `dark:bg-input/30`) d'un declenchement
+ * par `prefers-color-scheme` (comportement par defaut Tailwind v4) vers un
+ * declenchement uniquement par une classe `.dark` explicite. Le dark mode
+ * reste hors-perimetre (Task 2) : aucune classe `.dark` n'est jamais posee
+ * dans l'app, donc ce commutateur neutralise tout basculement sombre
+ * involontaire pilote par les preferences OS de l'utilisateur.
+ */
+@custom-variant dark (&:is(.dark *));
 
 /*
  * "Console Pro" design tokens.
@@ -119,4 +143,56 @@ body {
   background-color: var(--color-canvas);
   color: var(--color-foreground);
   font-family: var(--font-sans);
+}
+
+/*
+ * Scaffolding genere par `npx shadcn init` (Task 3), laisse tel quel.
+ * Le dark mode reste explicitement hors-perimetre (Task 2) : ce bloc
+ * n'est jamais active (aucune classe `.dark` n'est posee dans l'app) et
+ * n'est pas construit/etendu ici — cf. commentaire `@custom-variant dark`
+ * plus haut.
+ */
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+/*
+ * Reset de base genere par `npx shadcn init` (Task 3). Sans effet sur le
+ * rendu actuel : les regles `body`/`background`/`color` ci-dessus ne sont
+ * pas dans un `@layer` et restent donc prioritaires sur celles-ci dans la
+ * cascade (les regles non-layered l'emportent toujours sur les regles
+ * `@layer`). Conserve pour le `border-border`/`outline-ring` global
+ * qu'attendent les primitifs generes.
+ */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
 }
