@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+/*
+ * "Console Pro" design tokens.
+ *
+ * Layering follows shadcn/ui's documented Tailwind v4 convention so that
+ * Task 3's `npx shadcn init` finds this file already conformant:
+ *   - `:root` holds the raw values (the single source of truth).
+ *   - `@theme inline` re-exposes them as `--color-*` / `--radius-*` so
+ *     Tailwind generates utilities (bg-primary, text-foreground, rounded-lg, ...)
+ *     and shadcn components (which reference --background, --primary,
+ *     --card, --popover, --secondary, --muted, --accent, --destructive,
+ *     --border, --input, --ring, etc.) resolve to Console Pro values
+ *     instead of shadcn's own default palette.
+ *
+ * Global Constraint: surfaces are flat single-colour fills. Never add
+ * bg-gradient-* utilities or linear-gradient()/radial-gradient() here.
+ */
+
+@theme {
+  /* Spacing — grille 4px, Global Constraint : pas de valeur arbitraire ailleurs dans le projet */
+  --spacing: 0.25rem;
+
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+@theme inline {
+  /* Radius scale derived from --radius (0.5rem = rounded-lg by default, spec §3) */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+
+  /* shadcn/ui semantic contract (Task 3 — npx shadcn init) */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Console Pro — palette "marque" (spec §3) */
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-canvas: var(--canvas);
+  --color-canvas-soft: var(--canvas-soft);
+
+  /* Console Pro — semantiques, badges d'etat de commande + alertes stock (spec §3) */
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+}
+
+:root {
+  --radius: 0.5rem;
+
+  /* shadcn/ui semantic contract, valeurs Console Pro */
+  --background: #ffffff;
+  --foreground: #111827;
+  --card: #ffffff;
+  --card-foreground: #111827;
+  --popover: #ffffff;
+  --popover-foreground: #111827;
+
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+
+  /* Secondaire/muted/accent derives de la palette Console Pro : surfaces
+     neutres claires (gris ardoise) pour rester sobres a cote de l'indigo
+     primaire, qui reste la seule couleur "de marque" saturee. */
+  --secondary: #f3f4f6;
+  --secondary-foreground: #111827;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  /* Accent = teinte indigo tres claire (survol/etat actif), coherente avec
+     le primary sans reprendre sa saturation. */
+  --accent: #eef2ff;
+  --accent-foreground: #111827;
+
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  /* Ring = primary : anneau de focus visible et coherent avec la couleur de marque. */
+  --ring: #6366f1;
+
+  /* Console Pro — palette (spec §3) */
+  --primary-hover: #4f46e5;
+  --primary-active: #4338ca;
+  --sidebar: #111827;
+  --sidebar-foreground: #e5e7eb;
+  --canvas: #ffffff;
+  --canvas-soft: #f9fafb;
+
+  /* Console Pro — semantiques, badges d'etat de commande + alertes stock (spec §3) */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #dc2626;
+}
+
+/* Global Constraint : surfaces plates uniquement, jamais de bg-gradient-* ni linear-gradient() */
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}
