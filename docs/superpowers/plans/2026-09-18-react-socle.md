@@ -328,7 +328,7 @@ Vérifie que `src/components/ui/button.tsx` est créé et référence `cn()` dep
 Créer `src/components/ui/button.test.tsx` :
 
 ```tsx
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Button } from './button';
@@ -421,11 +421,12 @@ git commit -m "test(react): couverture de l'utilitaire cn()"
 **Files:**
 - Create: `frontend/react/gestion-de-stock-frontend/scripts/generate-api.sh`
 - Create: `frontend/react/gestion-de-stock-frontend/src/api/schema.d.ts` (généré)
+- Create: `frontend/react/gestion-de-stock-frontend/src/api/config.ts`
 - Create: `frontend/react/gestion-de-stock-frontend/src/api/client.ts`
 - Create: `frontend/react/gestion-de-stock-frontend/src/api/client.test.ts`
 
 **Interfaces:**
-- Produces: `apiClient` (instance `openapi-fetch` typée par `paths`), export nommé depuis `src/api/client.ts`, consommé par tous les hooks de domaine des plans suivants.
+- Produces: `API_BASE_URL` (depuis `config.ts`, sans aucune dependance — evite un import circulaire avec le middleware), `apiClient` (instance `openapi-fetch` typée par `paths`), export nommé depuis `src/api/client.ts`, consommé par tous les hooks de domaine des plans suivants.
 
 - [ ] **Step 1: Installer les dépendances**
 
@@ -463,14 +464,20 @@ Si le backend n'est pas démarrable dans l'environnement d'exécution du plan, c
 
 - [ ] **Step 4: Créer le client et son test**
 
+Créer `src/api/config.ts` (aucun import : c'est ce qui casse le cycle client <-> middleware) :
+
+```ts
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8081';
+```
+
 Créer `src/api/client.ts` :
 
 ```ts
 import createClient from 'openapi-fetch';
 import type { paths } from './schema';
+import { API_BASE_URL } from './config';
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8081';
-
+export { API_BASE_URL };
 export const apiClient = createClient<paths>({ baseUrl: API_BASE_URL });
 ```
 
@@ -502,7 +509,7 @@ Expected: PASS (2 tests)
 - [ ] **Step 5: Commit**
 
 ```bash
-git add scripts/generate-api.sh src/api/schema.d.ts src/api/client.ts src/api/client.test.ts package.json .env.development
+git add scripts/generate-api.sh src/api/schema.d.ts src/api/config.ts src/api/client.ts src/api/client.test.ts package.json .env.development
 git commit -m "feat(react): client API type genere depuis l'OpenAPI du backend"
 ```
 
@@ -639,7 +646,7 @@ Expected: FAIL (`refreshSession`/`__resetRefreshState` non exportés)
 Ajouter à `src/api/auth-middleware.ts` (partie 2/2) :
 
 ```ts
-import { API_BASE_URL } from './client';
+import { API_BASE_URL } from './config'; // jamais depuis './client' : cycle d'import (client importe ce module)
 
 let refreshEnCours: Promise<string> | null = null;
 
@@ -911,10 +918,12 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router';
 import { RequireAuth } from './RequireAuth';
-import * as useAuthModule from '../../hooks/use-auth';
+import { useAuth } from '../../hooks/use-auth';
+
+vi.mock('../../hooks/use-auth'); // vi.spyOn sur un export ESM leve "cannot redefine property"
 
 function renderWithAuth(isAuthenticated: boolean) {
-  vi.spyOn(useAuthModule, 'useAuth').mockReturnValue({
+  vi.mocked(useAuth).mockReturnValue({
     isAuthenticated, connectedUser: null, login: vi.fn(), logout: vi.fn(),
   });
   return render(
@@ -1023,7 +1032,7 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 import {
   LayoutDashboard, PieChart, BarChart3, Boxes, Ship, ShoppingCart,
-  Users, ShoppingBasket, Truck, Settings, Tags, UsersCog, Building2, LogOut,
+  Users, ShoppingBasket, Truck, Settings, Tags, UserCog, Building2, LogOut,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/use-auth';
 
@@ -1050,7 +1059,7 @@ const menuProperties: GroupeMenu[] = [
   ]},
   { id: '5', titre: 'Parametrages', sousMenu: [
     { id: '51', titre: 'Categories', icon: Tags, url: 'categories' },
-    { id: '52', titre: 'Utilisateurs', icon: UsersCog, url: 'utilisateurs' },
+    { id: '52', titre: 'Utilisateurs', icon: UserCog, url: 'utilisateurs' },
     { id: '53', titre: 'Mon entreprise', icon: Building2, url: 'entreprise' },
   ]},
 ];
@@ -1120,11 +1129,13 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { Header } from './Header';
-import * as useAuthModule from '../../hooks/use-auth';
+import { useAuth } from '../../hooks/use-auth';
+
+vi.mock('../../hooks/use-auth');
 
 describe('Header', () => {
   it('affiche le nom de l\'utilisateur connecte', () => {
-    vi.spyOn(useAuthModule, 'useAuth').mockReturnValue({
+    vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true, connectedUser: { nom: 'Doe' }, login: vi.fn(), logout: vi.fn(),
     });
     render(<MemoryRouter><Header /></MemoryRouter>);
@@ -1353,7 +1364,7 @@ Expected: FAIL (`routes.tsx` non implémenté)
 Créer `src/routes.tsx` (chemins strictement identiques à `app.routes.ts` Angular — Global Constraint) :
 
 ```tsx
-import { Routes, Route, Navigate } from 'react-router';
+import { Routes, Route, Navigate, Outlet } from 'react-router';
 import { AppShell } from './components/layout/AppShell';
 import { RequireAuth } from './components/layout/RequireAuth';
 import { createDomainStub } from './pages/_stubs/DomainStub';
@@ -1376,7 +1387,7 @@ export function AppRoutes() {
       <Route path="/motdepasseoublie" element={<stubs.motdepasseoublie />} />
 
       <Route element={<RequireAuth />}>
-        <Route element={<AppShell><Outlet404 /></AppShell>}>
+        <Route element={<AppShell><Outlet /></AppShell>}>
           <Route index element={<Navigate to="/accueil" replace />} />
           <Route path="accueil" element={<stubs.accueil />} />
           <Route path="statistiques" element={<stubs.statistiques />} />
@@ -1412,7 +1423,6 @@ export function AppRoutes() {
 }
 ```
 
-> Note d'implémentation : `<AppShell>` attend `children`, incompatible tel quel avec `<Route element={<AppShell><Outlet404/></AppShell>}>`. Remplacer `Outlet404` par un import `{ Outlet } from 'react-router'` et passer `<Outlet />` comme enfant : `<Route element={<AppShell><Outlet /></AppShell>}>`. Corriger l'import en conséquence avant de lancer les tests.
 
 Run: `npm test -- routes`
 Expected: PASS (26 tests : 22 routes protégées itérées + redirection + 3 routes publiques — ajuster le compte exact selon `it.each`)
@@ -1914,4 +1924,3 @@ git commit -m "chore(react): socle valide — tooling, tokens, auth, shell, patr
 
 **Cohérence de types** : `useAuth()` retourne `{ connectedUser, isAuthenticated, login, logout }` de façon identique entre Task 7 (définition) et ses usages en Task 8/9 ; `DataTable<T>({ columns, data, getRowId })` a la même signature en Task 12 (définition) qu'attendue par les plans de domaine à venir ; `apiClient` (Task 5) est le seul point d'entrée réseau, réutilisé tel quel en Task 6/7.
 
-**Note pour l'exécutant** : le Task 10/Step 4 contient une correction à appliquer avant de lancer les tests (`Outlet404` → `Outlet` de `react-router`) — c'est un choix délibéré pour signaler explicitement le point d'attention plutôt que de le laisser implicite dans un bloc de code qui semblerait autrement fonctionner tel quel.
