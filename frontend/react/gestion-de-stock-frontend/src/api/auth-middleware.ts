@@ -16,9 +16,31 @@ export function getStoredSession(): AuthSession | null {
   }
 }
 
+const purgeListeners = new Set<() => void>();
+
+/** S'abonne aux purges de session (ex: refresh echoue). Retourne le desabonnement. */
+export function onSessionPurged(listener: () => void): () => void {
+  purgeListeners.add(listener);
+  return () => {
+    purgeListeners.delete(listener);
+  };
+}
+
+/** Reservee aux tests : nombre d'abonnes actifs (detection de fuite) */
+export function __purgeListenerCount(): number {
+  return purgeListeners.size;
+}
+
 export function purgeSession(): void {
   localStorage.removeItem('accessToken');
   localStorage.removeItem('connectedUser');
+  for (const listener of [...purgeListeners]) {
+    try {
+      listener();
+    } catch {
+      // un abonne defaillant ne doit pas empecher la purge ni les autres abonnes
+    }
+  }
 }
 
 export function buildAuthHeader(): string | null {
