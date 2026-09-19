@@ -6,7 +6,7 @@ import userEvent from '@testing-library/user-event';
 import { AuthProvider } from './AuthProvider';
 import { useAuth } from './use-auth';
 import { apiClient } from '../api/client';
-import { __purgeListenerCount, purgeSession } from '../api/auth-middleware';
+import { __purgeListenerCount, onSessionPurged, purgeSession } from '../api/auth-middleware';
 
 const AUTH_RESPONSE = {
   accessToken: 'tok',
@@ -312,5 +312,62 @@ describe('AuthProvider : purge externe (R36)', () => {
     expect(__purgeListenerCount()).toBe(base + 1);
     unmount();
     expect(__purgeListenerCount()).toBe(base);
+  });
+});
+
+describe('AuthProvider : echec de login au stade profil avec session precedente', () => {
+  const PREV_BLOB = JSON.stringify({ accessToken: 'ancien', refreshToken: 'ancien-ref', expiresIn: 1, email: 'ancien@b.com' });
+  const PREV_USER = JSON.stringify({ id: 9, nom: 'Ancien', prenom: 'A', email: 'ancien@b.com' });
+
+  const cas: Array<[string, () => void]> = [
+    ['profil en erreur (404)', () => {
+      vi.spyOn(apiClient, 'POST').mockResolvedValue({ data: AUTH_RESPONSE } as never);
+      vi.spyOn(apiClient, 'GET').mockResolvedValue({ data: undefined, error: { message: 'introuvable' } } as never);
+    }],
+    ['profil qui leve', () => {
+      vi.spyOn(apiClient, 'POST').mockResolvedValue({ data: AUTH_RESPONSE } as never);
+      vi.spyOn(apiClient, 'GET').mockRejectedValue(new TypeError('Failed to fetch'));
+    }],
+    ['reponse avec jetons mais sans email', () => {
+      vi.spyOn(apiClient, 'POST').mockResolvedValue({ data: { accessToken: 'tok', refreshToken: 'ref' } } as never);
+      vi.spyOn(apiClient, 'GET').mockResolvedValue({ data: USER } as never);
+    }],
+  ];
+
+  it.each(cas)('%s : la session precedente est intacte', async (_nom, arranger) => {
+    localStorage.setItem('accessToken', PREV_BLOB);
+    localStorage.setItem('connectedUser', PREV_USER);
+    arranger();
+    const purge = vi.fn();
+    const off = onSessionPurged(purge);
+
+    mount();
+    await userEvent.click(screen.getByText('login'));
+    await waitFor(() => expect(loginError).not.toBeNull());
+    off();
+
+    expect(localStorage.getItem('accessToken')).toBe(PREV_BLOB);
+    expect(localStorage.getItem('connectedUser')).toBe(PREV_USER);
+    expect(status()).toHaveTextContent('connecte');
+    expect(screen.getByTestId('user')).toHaveTextContent('Ancien');
+    expect(purge).not.toHaveBeenCalled();
+  });
+
+  it.each(cas)('%s : stockage vide -> reste vide', async (_nom, arranger) => {
+    arranger();
+    mount();
+    await userEvent.click(screen.getByText('login'));
+    await waitFor(() => expect(loginError).not.toBeNull());
+    expect(localStorage.length).toBe(0);
+    expect(status()).toHaveTextContent('deconnecte');
+  });
+});
+
+describe('AuthProvider : profil stocke invalide', () => {
+  it.each(['[]', '{}', 'null', '"x"'])('connectedUser=%s -> deconnecte', (brut) => {
+    localStorage.setItem('accessToken', JSON.stringify(AUTH_RESPONSE));
+    localStorage.setItem('connectedUser', brut);
+    mount();
+    expect(status()).toHaveTextContent('deconnecte');
   });
 });

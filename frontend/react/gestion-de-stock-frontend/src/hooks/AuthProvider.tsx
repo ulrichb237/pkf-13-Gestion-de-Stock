@@ -15,7 +15,8 @@ function readStoredUser(): UtilisateurDto | null {
   if (!getStoredSession()) return null;
   try {
     const parsed: unknown = JSON.parse(localStorage.getItem('connectedUser') ?? 'null');
-    return parsed && typeof parsed === 'object' ? (parsed as UtilisateurDto) : null;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+    return typeof (parsed as { email?: unknown }).email === 'string' ? (parsed as UtilisateurDto) : null;
   } catch {
     return null;
   }
@@ -43,6 +44,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
       throw err instanceof TypeError ? new Error(MESSAGE_CONNEXION) : err;
     }
 
+    // Instantane brut de la session precedente : un echec au stade profil doit la laisser intacte.
+    const precedent = {
+      accessToken: localStorage.getItem('accessToken'),
+      connectedUser: localStorage.getItem('connectedUser'),
+    };
     // Le middleware lit le jeton dans localStorage : il doit y etre avant l'appel du profil.
     localStorage.setItem('accessToken', JSON.stringify(authResponse));
     try {
@@ -56,7 +62,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
       // Profil charge AVANT de basculer en authentifie (pas de page sans connectedUser).
       setConnectedUser(res.data);
     } catch (err) {
-      purgeSession(); // session partielle : jeton stocke mais profil indisponible
+      // Restauration (pas purgeSession : elle notifie et deconnecterait l'etat React).
+      for (const [cle, valeur] of Object.entries(precedent)) {
+        if (valeur === null) localStorage.removeItem(cle);
+        else localStorage.setItem(cle, valeur);
+      }
       throw err instanceof TypeError ? new Error(MESSAGE_CONNEXION) : err;
     }
   }, []);
