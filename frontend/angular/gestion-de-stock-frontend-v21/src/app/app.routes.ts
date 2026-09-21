@@ -15,11 +15,28 @@ export const authGuard = (): boolean | ReturnType<Router['parseUrl']> => {
 };
 
 /**
+ * Guard de la landing page : un visiteur deja connecte est renvoye
+ * directement au tableau de bord au lieu de revoir la page publique.
+ */
+export const redirectSiConnecte = (): boolean | ReturnType<Router['parseUrl']> => {
+  const router = inject(Router);
+  if (localStorage.getItem('accessToken')) {
+    return router.parseUrl('/accueil');
+  }
+  return true;
+};
+
+/**
  * Lazy loading systematique via loadComponent (recommandation officielle
  * du MCP Angular / guide best practices) : chaque page est un chunk separe,
  * charge a la premiere navigation. Le guard est reevalue a chaque niveau.
  */
 export const routes: Routes = [
+  // Racine publique : landing page (les connectes sont rediriges vers /accueil).
+  // Placee AVANT le parent path:'' du dashboard, sinon il capterait '/' via
+  // sa redirection interne ; pathMatch full limite la concordance a '/' exact.
+  { path: '', pathMatch: 'full', loadComponent: () => import('./pages/page-landing/page-landing.component').then(m => m.PageLandingComponent), canActivate: [redirectSiConnecte] },
+  { path: 'landing', loadComponent: () => import('./pages/page-landing/page-landing.component').then(m => m.PageLandingComponent), canActivate: [redirectSiConnecte] },
   { path: 'login', loadComponent: () => import('./pages/page-login/page-login.component').then(m => m.PageLoginComponent) },
   { path: 'motdepasseoublie', loadComponent: () => import('./pages/page-mot-de-passe-oublie/page-mot-de-passe-oublie.component').then(m => m.PageMotDePasseOublieComponent) },
   { path: 'inscrire', loadComponent: () => import('./pages/page-inscription/page-inscription.component').then(m => m.PageInscriptionComponent) },
