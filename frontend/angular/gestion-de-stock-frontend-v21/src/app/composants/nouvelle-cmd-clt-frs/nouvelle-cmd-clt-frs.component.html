@@ -3,20 +3,28 @@
     <h2>Nouvelle commande {{ origin }}</h2>
   </div>
 
-  <div class="alert alert-danger" *ngIf="errorMsg.length">
-    <div *ngFor="let msg of errorMsg"><span>{{ msg }}</span></div>
+  <div class="alert alert-danger" *ngIf="erreursGenerales.length">
+    <div *ngFor="let msg of erreursGenerales"><span>{{ msg }}</span></div>
   </div>
 
   <div class="card custom-border p-3">
     <div class="cmd-form-grid">
       <div class="cmd-form-fields">
-        <input type="text" class="form-control" name="codeCmd" placeholder="Code commande" [(ngModel)]="codeCommande">
-        <select class="form-control" name="cltFrs" [(ngModel)]="selectedClientFournisseur">
-          <option [ngValue]="null" disabled>Selectionner un {{ origin }}</option>
-          <option *ngFor="let obj of listClientsFournisseurs" [ngValue]="obj">
-            {{ obj.nom }}&nbsp;{{ obj.prenom }}
-          </option>
-        </select>
+        <div>
+          <input type="text" class="form-control" name="codeCmd" placeholder="Code commande" [(ngModel)]="codeCommande">
+        </div>
+        <div>
+          <select class="form-control" name="cltFrs" [(ngModel)]="selectedClientFournisseur"
+                  [class.input-error]="erreurClientFrs().length > 0">
+            <option [ngValue]="null" disabled>Selectionner un {{ origin }}</option>
+            <option *ngFor="let obj of listClientsFournisseurs" [ngValue]="obj">
+              {{ obj.nom }}&nbsp;{{ obj.prenom }}
+            </option>
+          </select>
+          @for (msg of erreurClientFrs(); track $index) {
+            <p class="field-error">{{ msg }}</p>
+          }
+        </div>
       </div>
 
       <div class="cmd-form-clt" *ngIf="selectedClientFournisseur?.nom">
@@ -37,14 +45,24 @@
     <div class="form-grid-4">
       <div class="autocomplete-wrap">
         <input type="text" class="form-control" placeholder="Code article"
+               [class.input-error]="erreurCodeArticle().length > 0"
                [(ngModel)]="codeArticle" (input)="filtrerArticle()">
         <div *ngIf="codeArticle.length && !articleNotYetSelected" class="autocomplete">
           <p class="autocomplete-item tnum" *ngFor="let article of listArticle" (click)="selectArticleClick(article)">
             {{ article.codeArticle }}&nbsp; {{ article.designation }}
           </p>
         </div>
+        @for (msg of erreurCodeArticle(); track $index) {
+          <p class="field-error">{{ msg }}</p>
+        }
       </div>
-      <input type="number" min="1" class="form-control" placeholder="Quantite" [(ngModel)]="quantite">
+      <div>
+        <input type="number" min="1" class="form-control" placeholder="Quantite" [(ngModel)]="quantite"
+               [class.input-error]="erreurQuantite().length > 0">
+        @for (msg of erreurQuantite(); track $index) {
+          <p class="field-error">{{ msg }}</p>
+        }
+      </div>
       <input type="text" class="form-control" placeholder="Prix unitaire" [(ngModel)]="searchedArticle.prixUnitaireTtc">
       <button type="button" class="btn btn-success" (click)="ajouterLigneCommande()">Ajouter</button>
     </div>

@@ -30,11 +30,25 @@ export class NouvelleCmdCltFrsComponent implements OnInit {
   quantite = '';
   codeCommande = '';
 
+  /** Erreurs rattachees a un champ precis (affichees sous le champ concerne) */
+  readonly erreurClientFrs = signal<string[]>([]);
+  readonly erreurCodeArticle = signal<string[]>([]);
+  readonly erreurQuantite = signal<string[]>([]);
+
+  /** Purge les erreurs de champ */
+  private purgerErreursChamps(): void {
+    this.erreurClientFrs.set([]);
+    this.erreurCodeArticle.set([]);
+    this.erreurQuantite.set([]);
+  }
+
   /** Lignes locales de la commande en creation (signal, recree a chaque mutation) */
   readonly lignesCommande = signal<Array<any>>([]);
   readonly totalCommande = signal(0);
   articleNotYetSelected = false;
   errorMsg: string = '';
+  /** Erreurs non rattachees a un champ precis (bandeau general) */
+  erreursGenerales: Array<string> = [];
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -82,6 +96,16 @@ export class NouvelleCmdCltFrsComponent implements OnInit {
   }
 
   ajouterLigneCommande(): void {
+    this.purgerErreursChamps();
+    if (!this.searchedArticle.id) {
+      this.articleNotYetSelected = true;
+      this.erreurCodeArticle.set(['Selectionnez un article dans la liste avant d ajouter une ligne']);
+      return;
+    }
+    if (!this.quantite || +this.quantite < 1) {
+      this.erreurQuantite.set(['Veuillez saisir une quantite superieure ou egale a 1']);
+      return;
+    }
     this.checkLigneCommande();
     this.calculerTotalCommande();
 
@@ -142,6 +166,16 @@ export class NouvelleCmdCltFrsComponent implements OnInit {
   }
 
   enregistrerCommande(): void {
+    this.erreursGenerales = [];
+    this.purgerErreursChamps();
+    if (!this.selectedClientFournisseur?.id) {
+      this.erreurClientFrs.set(['Veuillez selectionner un ' + (this.origin === 'fournisseur' ? 'fournisseur' : 'client')]);
+      return;
+    }
+    if (!this.lignesCommande().length) {
+      this.erreurCodeArticle.set(['Ajoutez au moins un article a la commande']);
+      return;
+    }
     const commande = this.preparerCommande();
     if (this.origin === 'client') {
       this.cmdCltFrsService.enregistrerCommandeClient(commande as CommandeClientDto)
@@ -149,6 +183,7 @@ export class NouvelleCmdCltFrsComponent implements OnInit {
         this.router.navigate(['commandesclient']);
       }, error => {
         this.errorMsg = CmdcltfrsService.errorMsg(error);
+        this.erreursGenerales = [this.errorMsg];
       });
     } else if (this.origin === 'fournisseur') {
       this.cmdCltFrsService.enregistrerCommandeFournisseur(commande as CommandeFournisseurDto)
@@ -156,6 +191,7 @@ export class NouvelleCmdCltFrsComponent implements OnInit {
         this.router.navigate(['commandesfournisseur']);
       }, error => {
         this.errorMsg = CmdcltfrsService.errorMsg(error);
+        this.erreursGenerales = [this.errorMsg];
       });
     }
   }

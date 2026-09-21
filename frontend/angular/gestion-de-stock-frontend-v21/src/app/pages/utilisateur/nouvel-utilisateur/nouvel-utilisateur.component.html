@@ -3,39 +3,84 @@
     <h2>{{ modeEdition() ? 'Fiche utilisateur' : 'Nouvel utilisateur' }}</h2>
   </div>
 
-  <div class="alert alert-danger" *ngIf="errorMsg()">{{ errorMsg() }}</div>
+  <div class="alert alert-danger" *ngIf="erreursGenerales().length > 0">
+    <div *ngFor="let msg of erreursGenerales()">{{ msg }}</div>
+  </div>
   <div class="empty-state" *ngIf="chargement()">Chargement...</div>
 
   <div class="card custom-border p-3" *ngIf="!chargement()">
     <form>
       <div class="form-grid-2">
-        <input type="text" class="form-control" placeholder="Nom"
-               [value]="utilisateurDto().nom || ''" (input)="champ('nom', $event)">
-        <input type="text" class="form-control" placeholder="Adresse 1"
-               [value]="utilisateurDto().adresse?.adresse1 || ''" (input)="champAdresse('adresse1', $event)">
-        <input type="text" class="form-control" placeholder="Prenom"
-               [value]="utilisateurDto().prenom || ''" (input)="champ('prenom', $event)">
-        <input type="text" class="form-control" placeholder="Adresse 2"
-               [value]="utilisateurDto().adresse?.adresse2 || ''" (input)="champAdresse('adresse2', $event)">
-        <input type="email" class="form-control" placeholder="E-mail"
-               [value]="utilisateurDto().email || ''" (input)="champ('email', $event)">
-        <input type="text" class="form-control" placeholder="Ville"
-               [value]="utilisateurDto().adresse?.ville || ''" (input)="champAdresse('ville', $event)">
-        <input type="date" class="form-control" aria-label="Date de naissance"
-               [value]="dateNaissanceInput()" (input)="champDateNaissance($event)">
-        <input type="text" class="form-control" placeholder="Code postal"
-               [value]="utilisateurDto().adresse?.codePostale || ''" (input)="champAdresse('codePostale', $event)">
+        <div>
+          <input type="text" class="form-control" placeholder="Nom"
+                 [ngClass]="classeErreur('nom')"
+                 [value]="utilisateurDto().nom || ''" (input)="champ('nom', $event)">
+          <div *ngFor="let msg of erreurDe('nom')"><p class="field-error">{{ msg }}</p></div>
+        </div>
+        <div>
+          <input type="text" class="form-control" placeholder="Adresse 1"
+                 [ngClass]="classeErreur('adresse1')"
+                 [value]="utilisateurDto().adresse?.adresse1 || ''" (input)="champAdresse('adresse1', $event)">
+          <div *ngFor="let msg of erreurDe('adresse1')"><p class="field-error">{{ msg }}</p></div>
+        </div>
+        <div>
+          <input type="text" class="form-control" placeholder="Prenom"
+                 [ngClass]="classeErreur('prenom')"
+                 [value]="utilisateurDto().prenom || ''" (input)="champ('prenom', $event)">
+          <div *ngFor="let msg of erreurDe('prenom')"><p class="field-error">{{ msg }}</p></div>
+        </div>
+        <div>
+          <input type="text" class="form-control" placeholder="Adresse 2"
+                 [ngClass]="classeErreur('adresse2')"
+                 [value]="utilisateurDto().adresse?.adresse2 || ''" (input)="champAdresse('adresse2', $event)">
+          <div *ngFor="let msg of erreurDe('adresse2')"><p class="field-error">{{ msg }}</p></div>
+        </div>
+        <div>
+          <input type="email" class="form-control" placeholder="E-mail"
+                 [ngClass]="classeErreur('email')"
+                 [value]="utilisateurDto().email || ''" (input)="champ('email', $event)">
+          <div *ngFor="let msg of erreurDe('email')"><p class="field-error">{{ msg }}</p></div>
+        </div>
+        <div>
+          <input type="text" class="form-control" placeholder="Ville"
+                 [ngClass]="classeErreur('ville')"
+                 [value]="utilisateurDto().adresse?.ville || ''" (input)="champAdresse('ville', $event)">
+          <div *ngFor="let msg of erreurDe('ville')"><p class="field-error">{{ msg }}</p></div>
+        </div>
+        <div>
+          <input type="date" class="form-control" aria-label="Date de naissance"
+                 [ngClass]="classeErreur('dateDeNaissance')"
+                 [value]="dateNaissanceInput()" (input)="champDateNaissance($event)">
+          <div *ngFor="let msg of erreurDe('dateDeNaissance')"><p class="field-error">{{ msg }}</p></div>
+        </div>
+        <div>
+          <input type="text" class="form-control" placeholder="Code postal"
+                 [ngClass]="classeErreur('codePostale')"
+                 [value]="utilisateurDto().adresse?.codePostale || ''" (input)="champAdresse('codePostale', $event)">
+          <div *ngFor="let msg of erreurDe('codePostale')"><p class="field-error">{{ msg }}</p></div>
+        </div>
         <span></span>
-        <input type="text" class="form-control" placeholder="Pays"
-               [value]="utilisateurDto().adresse?.pays || ''" (input)="champAdresse('pays', $event)">
+        <div>
+          <input type="text" class="form-control" placeholder="Pays"
+                 [ngClass]="classeErreur('pays')"
+                 [value]="utilisateurDto().adresse?.pays || ''" (input)="champAdresse('pays', $event)">
+          <div *ngFor="let msg of erreurDe('pays')"><p class="field-error">{{ msg }}</p></div>
+        </div>
       </div>
 
       @if (!modeEdition()) {
         <div class="form-grid-2 mt-2">
-          <input type="password" class="form-control" placeholder="Mot de passe (min. 6 caracteres)"
-                 [value]="motDePasse()" (input)="motDePasse.set($any($event.target).value)">
-          <input type="password" class="form-control" placeholder="Confirmer le mot de passe"
-                 [value]="confirmMotDePasse()" (input)="confirmMotDePasse.set($any($event.target).value)">
+          <div>
+            <app-champ-mot-de-passe inputId="utilisateur-password" [(valeur)]="motDePasse"
+                                    placeholder="Mot de passe (min. 6 caracteres)"
+                                    autocomplete="new-password"></app-champ-mot-de-passe>
+            <div *ngFor="let msg of erreurDe('motDePasse')"><p class="field-error">{{ msg }}</p></div>
+          </div>
+          <div>
+            <app-champ-mot-de-passe inputId="utilisateur-password-confirm" [(valeur)]="confirmMotDePasse"
+                                    placeholder="Confirmer le mot de passe"
+                                    autocomplete="new-password"></app-champ-mot-de-passe>
+          </div>
         </div>
       } @else {
         <p class="text-muted mt-2">Le mot de passe se modifie via la page « Changer le mot de passe ».</p>

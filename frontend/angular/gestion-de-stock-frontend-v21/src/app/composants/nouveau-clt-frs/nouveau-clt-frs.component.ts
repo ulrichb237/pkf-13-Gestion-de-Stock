@@ -1,4 +1,4 @@
-import { NgIf, NgFor } from '@angular/common';
+import { NgIf, NgFor, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
@@ -9,9 +9,12 @@ import {FournisseurDto} from '../../../gs-api/src/models/fournisseur-dto';
 import {PhotosService} from '../../../gs-api/src/services/photos.service';
 import SavePhotoParams = PhotosService.SavePhotoParams;
 
+/** Clefs de champs du formulaire client / fournisseur (erreurs sous le champ) */
+type ChampsCltFrs = 'nom' | 'prenom' | 'mail' | 'numTel' | 'adresse1' | 'adresse2' | 'ville' | 'codePostale' | 'pays';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgIf, NgFor, FormsModule],
+  imports: [NgIf, NgFor, NgClass, FormsModule],
   selector: 'app-nouveau-clt-frs',
   templateUrl: './nouveau-clt-frs.component.html',
   styleUrls: ['./nouveau-clt-frs.component.scss']
@@ -23,6 +26,11 @@ export class NouveauCltFrsComponent implements OnInit {
   clientFournisseur: any = {};
   adresseDto: AdresseDto = {};
   errorMsg: Array<string> = [];
+
+  /** Erreurs rattachees a un champ (affichees sous le champ concerne) */
+  erreursChamps: Partial<Record<ChampsCltFrs, string[]>> = {};
+  /** Erreurs non rattachees a un champ precis (bandeau general) */
+  erreursGenerales: Array<string> = [];
   file: File | null = null;
   imgUrl: string | ArrayBuffer = 'assets/product.png';
 
@@ -59,20 +67,71 @@ export class NouveauCltFrsComponent implements OnInit {
     }
   }
 
+  /**
+   * Associe un message du backend (ClientValidator / FournisseurValidator /
+   * AdresseValidator) au champ concerne. Ordre important : les libelles les
+   * plus specifiques d'abord (adresse 2 avant adresse 1, nom avant prenom).
+   */
+  private static readonly REGLES_CHAMP_CLT_FRS: Array<{ champ: ChampsCltFrs; motif: RegExp }> = [
+    { champ: 'adresse2', motif: /adresse 2/i },
+    { champ: 'adresse1', motif: /adresse 1/i },
+    { champ: 'ville', motif: /ville/i },
+    { champ: 'codePostale', motif: /code postal/i },
+    { champ: 'pays', motif: /pays/i },
+    { champ: 'mail', motif: /mail/i },
+    { champ: 'numTel', motif: /telephone/i },
+    { champ: 'prenom', motif: /prenom/i },
+    { champ: 'nom', motif: /nom/i }
+  ];
+
+  /**
+   * Repartit les messages du backend sous le champ concerne.
+   * Un message non reconnu reste dans le bandeau general.
+   */
+  private repartirErreurs(messages: Array<string>): void {
+    const parChamp: Partial<Record<ChampsCltFrs, string[]>> = {};
+    const generales: Array<string> = [];
+
+    for (const message of messages) {
+      const regle = NouveauCltFrsComponent.REGLES_CHAMP_CLT_FRS.find(r => r.motif.test(message));
+      if (regle) {
+        (parChamp[regle.champ] ??= []).push(message);
+      } else {
+        generales.push(message);
+      }
+    }
+
+    this.erreursChamps = parChamp;
+    this.erreursGenerales = generales;
+    this.errorMsg = messages;
+  }
+
+  /** Erreurs du champ donne, pour le template */
+  erreurDe(champ: ChampsCltFrs): Array<string> {
+    return this.erreursChamps[champ] ?? [];
+  }
+
+  /** Classe input-error a appliquer au champ tant que son erreur est affichee */
+  classeErreur(champ: ChampsCltFrs): Record<string, boolean> {
+    return { 'input-error': this.erreurDe(champ).length > 0 };
+  }
+
   enregistrer(): void {
+    this.erreursChamps = {};
+    this.erreursGenerales = [];
     if (this.origin === 'client') {
       this.cltFrsService.enregistrerClient(this.mapToClient())
       .subscribe(client => {
         this.savePhoto(client.id, client.nom);
       }, error => {
-        this.errorMsg = error.error.errors;
+        this.repartirErreurs(error?.error?.errors ?? []);
       });
     } else if (this.origin === 'fournisseur') {
       this.cltFrsService.enregistrerFournisseur(this.mapToFournisseur())
       .subscribe(fournisseur => {
         this.savePhoto(fournisseur.id, fournisseur.nom);
       }, error => {
-        this.errorMsg = error.error.errors;
+        this.repartirErreurs(error?.error?.errors ?? []);
       });
     }
   }

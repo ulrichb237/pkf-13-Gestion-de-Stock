@@ -3,8 +3,8 @@
     <h2>Nouvelle vente</h2>
   </div>
 
-  <div class="alert alert-danger" *ngIf="errorMsg.length">
-    <div *ngFor="let msg of errorMsg"><span>{{ msg }}</span></div>
+  <div class="alert alert-danger" *ngIf="erreursGenerales.length">
+    <div *ngFor="let msg of erreursGenerales"><span>{{ msg }}</span></div>
   </div>
 
   <div class="card custom-border p-3">
@@ -18,14 +18,24 @@
     <div class="form-grid-4">
       <div class="autocomplete-wrap">
         <input type="text" class="form-control" placeholder="Code article"
+               [class.input-error]="erreurCodeArticle().length > 0"
                [(ngModel)]="codeArticle" name="codeArticleVente" (input)="filtrerArticle()">
         <div *ngIf="codeArticle.length && !articleNotYetSelected" class="autocomplete">
           <p class="autocomplete-item tnum" *ngFor="let article of listArticle" (click)="selectArticleClick(article)">
             {{ article.codeArticle }}&nbsp; {{ article.designation }}
           </p>
         </div>
+        @for (msg of erreurCodeArticle(); track $index) {
+          <p class="field-error">{{ msg }}</p>
+        }
       </div>
-      <input type="number" min="1" class="form-control" placeholder="Quantite" [(ngModel)]="quantite" name="quantiteVente">
+      <div>
+        <input type="number" min="1" class="form-control" placeholder="Quantite" [(ngModel)]="quantite" name="quantiteVente"
+               [class.input-error]="erreurQuantite().length > 0">
+        @for (msg of erreurQuantite(); track $index) {
+          <p class="field-error">{{ msg }}</p>
+        }
+      </div>
       <input type="text" class="form-control" placeholder="Prix unitaire" [(ngModel)]="searchedArticle.prixUnitaireTtc" name="prixVente">
       <button type="button" class="btn btn-success" (click)="ajouterLigneVente()">Ajouter</button>
     </div>

@@ -1,0 +1,39 @@
+/* Champ mot de passe + icone oeil, aligne sur le design system existant */
+
+.pwd-field {
+  position: relative;
+  display: block;
+}
+
+/* Le champ garde l'apparence .form-control globale ; on reserve la place de l'icone */
+.pwd-field .form-control {
+  padding-right: 44px;
+}
+
+.pwd-toggle {
+  position: absolute;
+  right: var(--sp-sm);
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--clr-ink-mute);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.pwd-toggle:hover {
+  color: var(--clr-ink);
+  background: var(--clr-canvas-soft);
+}
+
+.pwd-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(83, 58, 253, 0.18);
+}

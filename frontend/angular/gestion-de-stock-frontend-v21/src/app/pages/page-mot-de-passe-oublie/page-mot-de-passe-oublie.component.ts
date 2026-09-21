@@ -1,9 +1,11 @@
+import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 
 import { UserService } from '../../services/user/user.service';
 import { ForgotPasswordResponse } from '../../../gs-api/src/models/forgot-password-response';
+import { ChampMotDePasseComponent } from '../../composants/champ-mot-de-passe/champ-mot-de-passe.component';
 
 /**
  * Parcours "mot de passe oublie" en 2 etapes :
@@ -14,7 +16,7 @@ import { ForgotPasswordResponse } from '../../../gs-api/src/models/forgot-passwo
  * il est affiche dans un encadre info pour permettre au parcours de fonctionner.
  */
 @Component({
-  imports: [FormsModule, RouterLink],
+  imports: [NgClass, FormsModule, RouterLink, ChampMotDePasseComponent],
   selector: 'app-page-mot-de-passe-oublie',
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './page-mot-de-passe-oublie.component.html',
@@ -33,11 +35,26 @@ export class PageMotDePasseOublieComponent {
   readonly erreur = signal<string>('');
   readonly chargement = signal<boolean>(false);
 
+  /** Erreurs rattachees a un champ precis (affichees sous le champ concerne) */
+  readonly erreurEmail = signal<string[]>([]);
+  readonly erreurCode = signal<string[]>([]);
+  readonly erreurMotDePasse = signal<string[]>([]);
+  readonly erreurConfirmation = signal<string[]>([]);
+
+  /** Purge toutes les erreurs de champ */
+  private purgerErreursChamps(): void {
+    this.erreurEmail.set([]);
+    this.erreurCode.set([]);
+    this.erreurMotDePasse.set([]);
+    this.erreurConfirmation.set([]);
+  }
+
   constructor(private userService: UserService) { }
 
   demanderCode(): void {
+    this.purgerErreursChamps();
     if (!this.email) {
-      this.erreur.set('Veuillez saisir votre email');
+      this.erreurEmail.set(['Veuillez saisir votre email']);
       return;
     }
     this.chargement.set(true);
@@ -61,16 +78,18 @@ export class PageMotDePasseOublieComponent {
   }
 
   reinitialiser(): void {
+    this.purgerErreursChamps();
     if (!this.code) {
-      this.erreur.set('Veuillez saisir le code recu');
+      this.erreurCode.set(['Veuillez saisir le code recu']);
       return;
     }
     if (this.nouveauMotDePasse.length < 6) {
-      this.erreur.set('Le mot de passe doit contenir au moins 6 caracteres');
+      this.erreurMotDePasse.set(['Le mot de passe doit contenir au moins 6 caracteres']);
       return;
     }
     if (this.nouveauMotDePasse !== this.confirmation) {
-      this.erreur.set('Les deux mots de passe ne correspondent pas');
+      this.erreurMotDePasse.set(['Le mot de passe doit contenir au moins 6 caracteres']);
+      this.erreurConfirmation.set(['Les deux mots de passe ne correspondent pas']);
       return;
     }
     this.chargement.set(true);

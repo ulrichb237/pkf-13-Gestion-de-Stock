@@ -3,8 +3,8 @@
     <h2>Information du {{ origin }}</h2>
   </div>
 
-  <div class="alert alert-danger" *ngIf="errorMsg.length > 0">
-    <div *ngFor="let msg of errorMsg">{{ msg }}</div>
+  <div class="alert alert-danger" *ngIf="erreursGenerales.length > 0">
+    <div *ngFor="let msg of erreursGenerales">{{ msg }}</div>
   </div>
 
   <div class="card custom-border p-3">
@@ -15,16 +15,43 @@
 
     <form>
       <div class="form-grid-2">
-        <input type="text" class="form-control" placeholder="Nom" name="nom" [(ngModel)]="clientFournisseur.nom">
-        <input type="text" class="form-control" placeholder="Adresse 1" name="adresse1" [(ngModel)]="adresseDto.adresse1">
-        <input type="text" class="form-control" placeholder="Prenom" name="prenom" [(ngModel)]="clientFournisseur.prenom">
-        <input type="text" class="form-control" placeholder="Adresse 2" name="adresse2" [(ngModel)]="adresseDto.adresse2">
-        <input type="email" class="form-control" placeholder="E-mail" name="email" [(ngModel)]="clientFournisseur.mail">
-        <input type="text" class="form-control" placeholder="Ville" name="ville" [(ngModel)]="adresseDto.ville">
-        <input type="tel" class="form-control" placeholder="Telephone" name="numtel" [(ngModel)]="clientFournisseur.numTel">
-        <input type="text" class="form-control" placeholder="Code postal" name="codepostal" [(ngModel)]="adresseDto.codePostale">
+        <div>
+          <input type="text" class="form-control" placeholder="Nom" name="nom" [ngClass]="classeErreur('nom')" [(ngModel)]="clientFournisseur.nom">
+          <div *ngFor="let msg of erreurDe('nom')"><p class="field-error">{{ msg }}</p></div>
+        </div>
+        <div>
+          <input type="text" class="form-control" placeholder="Adresse 1" name="adresse1" [ngClass]="classeErreur('adresse1')" [(ngModel)]="adresseDto.adresse1">
+          <div *ngFor="let msg of erreurDe('adresse1')"><p class="field-error">{{ msg }}</p></div>
+        </div>
+        <div>
+          <input type="text" class="form-control" placeholder="Prenom" name="prenom" [ngClass]="classeErreur('prenom')" [(ngModel)]="clientFournisseur.prenom">
+          <div *ngFor="let msg of erreurDe('prenom')"><p class="field-error">{{ msg }}</p></div>
+        </div>
+        <div>
+          <input type="text" class="form-control" placeholder="Adresse 2" name="adresse2" [ngClass]="classeErreur('adresse2')" [(ngModel)]="adresseDto.adresse2">
+          <div *ngFor="let msg of erreurDe('adresse2')"><p class="field-error">{{ msg }}</p></div>
+        </div>
+        <div>
+          <input type="email" class="form-control" placeholder="E-mail" name="email" [ngClass]="classeErreur('mail')" [(ngModel)]="clientFournisseur.mail">
+          <div *ngFor="let msg of erreurDe('mail')"><p class="field-error">{{ msg }}</p></div>
+        </div>
+        <div>
+          <input type="text" class="form-control" placeholder="Ville" name="ville" [ngClass]="classeErreur('ville')" [(ngModel)]="adresseDto.ville">
+          <div *ngFor="let msg of erreurDe('ville')"><p class="field-error">{{ msg }}</p></div>
+        </div>
+        <div>
+          <input type="tel" class="form-control" placeholder="Telephone" name="numtel" [ngClass]="classeErreur('numTel')" [(ngModel)]="clientFournisseur.numTel">
+          <div *ngFor="let msg of erreurDe('numTel')"><p class="field-error">{{ msg }}</p></div>
+        </div>
+        <div>
+          <input type="text" class="form-control" placeholder="Code postal" name="codepostal" [ngClass]="classeErreur('codePostale')" [(ngModel)]="adresseDto.codePostale">
+          <div *ngFor="let msg of erreurDe('codePostale')"><p class="field-error">{{ msg }}</p></div>
+        </div>
         <span></span>
-        <input type="text" class="form-control" placeholder="Pays" name="pays" [(ngModel)]="adresseDto.pays">
+        <div>
+          <input type="text" class="form-control" placeholder="Pays" name="pays" [ngClass]="classeErreur('pays')" [(ngModel)]="adresseDto.pays">
+          <div *ngFor="let msg of erreurDe('pays')"><p class="field-error">{{ msg }}</p></div>
+        </div>
       </div>
     </form>
   </div>
