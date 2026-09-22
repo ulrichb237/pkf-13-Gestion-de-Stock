@@ -2,6 +2,7 @@ package com.k48.gestiondestock.controller.api;
 
 import static com.k48.gestiondestock.utils.Constants.VENTES_ENDPOINT;
 
+import com.k48.gestiondestock.dto.LigneVenteDto;
 import com.k48.gestiondestock.dto.VentesDto;
 import com.k48.gestiondestock.handlers.ErrorDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,6 +45,12 @@ public interface VentesApi {
   @ApiResponse(responseCode = "404", description = "Aucune vente avec cet identifiant",
       content = @Content(schema = @Schema(implementation = ErrorDto.class)))
   VentesDto findById(@Parameter(description = "Identifiant de la vente", example = "1") @PathVariable("idVente") Integer id);
+
+  @GetMapping(VENTES_ENDPOINT + "/{idVente}/lignes")
+  @Operation(summary = "Lister les lignes d'une vente",
+      description = "Renvoie les lignes (articles, quantités, prix) de la vente demandée.")
+  @ApiResponse(responseCode = "200", description = "Lignes de la vente")
+  List<LigneVenteDto> findLignesByVenteId(@Parameter(description = "Identifiant de la vente", example = "1") @PathVariable("idVente") Integer id);
 
   @GetMapping(VENTES_ENDPOINT + "/code/{codeVente}")
   @Operation(summary = "Rechercher une vente par code")

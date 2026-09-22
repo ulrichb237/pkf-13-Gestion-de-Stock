@@ -2,6 +2,7 @@ package com.k48.gestiondestock.controller;
 
 
 import com.k48.gestiondestock.controller.api.VentesApi;
+import com.k48.gestiondestock.dto.LigneVenteDto;
 import com.k48.gestiondestock.dto.VentesDto;
 import com.k48.gestiondestock.services.VentesService;
 import java.util.List;
@@ -36,6 +37,11 @@ public class VentesController implements VentesApi {
   @Override
   public List<VentesDto> findAll() {
     return ventesService.findAll();
+  }
+
+  @Override
+  public List<LigneVenteDto> findLignesByVenteId(Integer id) {
+    return ventesService.findLignesByVenteId(id);
   }
 
   @Override

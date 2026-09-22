@@ -126,6 +126,17 @@ public class VentesServiceImpl implements VentesService {
   }
 
   @Override
+  public List<LigneVenteDto> findLignesByVenteId(Integer id) {
+    if (id == null) {
+      log.error("Vente ID is NULL");
+      return List.of();
+    }
+    return ligneVenteRepository.findAllByVenteId(id).stream()
+        .map(LigneVenteDto::fromEntity)
+        .collect(Collectors.toList());
+  }
+
+  @Override
   public void delete(Integer id) {
     if (id == null) {
       log.error("Vente ID is NULL");
