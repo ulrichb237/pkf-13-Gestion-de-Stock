@@ -33,6 +33,9 @@ public class ArticleDto {
   @Schema(description = "Prix unitaire toutes taxes comprises", example = "11925", requiredMode = Schema.RequiredMode.REQUIRED)
   private BigDecimal prixUnitaireTtc;
 
+  @Schema(description = "Seuil d'alerte de stock : en dessous de cette quantité, l'article apparaît dans les alertes de réapprovisionnement (défaut 5 si non renseigné)", example = "10")
+  private Integer seuilAlerte;
+
   @Schema(description = "URL de la photo, renseignée par l'endpoint Photos (à renvoyer telle quelle lors d'une modification)")
   private String photo;
 
@@ -54,6 +57,7 @@ public class ArticleDto {
         .prixUnitaireHt(article.getPrixUnitaireHt())
         .prixUnitaireTtc(article.getPrixUnitaireTtc())
         .tauxTva(article.getTauxTva())
+        .seuilAlerte(article.getSeuilAlerte())
         .idEntreprise(article.getIdEntreprise())
         .category(CategoryDto.fromEntity(article.getCategory()))
         .build();
@@ -71,6 +75,7 @@ public class ArticleDto {
     article.setPrixUnitaireHt(articleDto.getPrixUnitaireHt());
     article.setPrixUnitaireTtc(articleDto.getPrixUnitaireTtc());
     article.setTauxTva(articleDto.getTauxTva());
+    article.setSeuilAlerte(articleDto.getSeuilAlerte());
     article.setIdEntreprise(articleDto.getIdEntreprise());
     article.setCategory(CategoryDto.toEntity(articleDto.getCategory()));
     return article;

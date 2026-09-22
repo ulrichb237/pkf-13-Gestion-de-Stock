@@ -62,6 +62,12 @@ public class ArticleServiceImpl implements ArticleService {
       dto.setCodeArticle(CodeGenerator.nextArticleCode(dernier));
     }
 
+    // Seuil d'alerte : defaut 5 si non renseigne (coherence avec le frontend,
+    // qui utilisait 5 comme seuil par defaut avant l'existence du champ).
+    if (dto.getSeuilAlerte() == null) {
+      dto.setSeuilAlerte(5);
+    }
+
     return ArticleDto.fromEntity(
         articleRepository.save(
             ArticleDto.toEntity(dto)

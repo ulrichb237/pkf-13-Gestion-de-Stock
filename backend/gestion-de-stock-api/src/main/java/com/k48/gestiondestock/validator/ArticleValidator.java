@@ -39,6 +39,10 @@ public class ArticleValidator {
     if (dto.getCategory() == null || dto.getCategory().getId() == null) {
       errors.add("Veuillez selectionner une categorie");
     }
+    // Seuil d'alerte facultatif (défaut 5 côté service) mais jamais négatif.
+    if (dto.getSeuilAlerte() != null && dto.getSeuilAlerte() < 0) {
+      errors.add("Le seuil d'alerte ne peut pas être négatif");
+    }
     return errors;
   }
 

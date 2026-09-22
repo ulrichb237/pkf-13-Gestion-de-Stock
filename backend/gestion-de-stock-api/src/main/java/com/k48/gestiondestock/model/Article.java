@@ -36,6 +36,13 @@ public class Article extends AbstractEntity {
   @Column(name = "prixunitairettc")
   private BigDecimal prixUnitaireTtc;
 
+  /**
+   * Seuil d'alerte de stock : en dessous de cette quantité, l'article apparaît dans les
+   * alertes de réapprovisionnement. Valeur par défaut 5 appliquée si null.
+   */
+  @Column(name = "seuilalerte")
+  private Integer seuilAlerte;
+
   @Column(name = "photo")
   private String photo;
 
