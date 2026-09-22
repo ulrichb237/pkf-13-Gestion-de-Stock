@@ -8,3 +8,6 @@
 
 # Brainstorming visual companion (superpowers)
 .superpowers/
+
+# Worktrees isoles crees par Claude Code (checkouts git, jamais a versionner)
+.claude/worktrees/
