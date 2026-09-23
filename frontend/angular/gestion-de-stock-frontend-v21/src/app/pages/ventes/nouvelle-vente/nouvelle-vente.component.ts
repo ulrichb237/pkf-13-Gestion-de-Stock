@@ -1,7 +1,7 @@
 import { NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
 import {Router} from '@angular/router';
 import {VentesServiceApp} from '../../../services/ventes/ventes.service';
 import {ArticleService} from '../../../services/article/article.service';
@@ -29,6 +29,14 @@ export class NouvelleVenteComponent implements OnInit {
   totalVente = 0;
   articleNotYetSelected = false;
   errorMsg: Array<string> = [];
+
+  /** Erreurs rattachees a un champ precis (affichees sous le champ concerne) */
+  readonly erreurCodeArticle = signal<string[]>([]);
+  readonly erreurQuantite = signal<string[]>([]);
+  /** Erreurs non rattachees a un champ precis (bandeau general). Les seules
+   *  violations attendues (date auto, articles introuvables) ne correspondent
+   *  a aucun champ du formulaire. */
+  erreursGenerales: Array<string> = [];
 
   constructor(
     private router: Router,
@@ -63,8 +71,16 @@ export class NouvelleVenteComponent implements OnInit {
   }
 
   ajouterLigneVente(): void {
+    this.erreurCodeArticle.set([]);
+    this.erreurQuantite.set([]);
     if (!this.searchedArticle.id) {
-      this.articleNotYetSelected = false;
+      // On ferme la liste d'autocomplete pour que le message d'erreur reste lisible
+      this.articleNotYetSelected = true;
+      this.erreurCodeArticle.set(['Selectionnez un article dans la liste avant d ajouter une ligne']);
+      return;
+    }
+    if (!this.quantite || +this.quantite < 1) {
+      this.erreurQuantite.set(['Veuillez saisir une quantite superieure ou egale a 1']);
       return;
     }
     const ligneExistante = this.lignesVente.find(lig => lig.article?.codeArticle === this.searchedArticle.codeArticle);
@@ -101,7 +117,15 @@ export class NouvelleVenteComponent implements OnInit {
   }
 
   enregistrerVente(): void {
+    this.erreursGenerales = [];
+    if (!this.lignesVente.length) {
+      this.erreursGenerales = ['Ajoutez au moins un article avant d enregistrer la vente'];
+      return;
+    }
     const vente: VentesDto = {
+      // Le backend attend une date ISO-8601 (voir VentesValidator : dateVente
+      // obligatoire) ; le DTO genere type la propriete en number.
+      dateVente: new Date().toISOString() as unknown as number,
       code: this.codeVente,
       commentaire: this.commentaire,
       ligneVentes: this.lignesVente
@@ -110,7 +134,8 @@ export class NouvelleVenteComponent implements OnInit {
     .subscribe(venteCree => {
       this.router.navigate(['ventes']);
     }, error => {
-      this.errorMsg = error?.error?.errors || ['Erreur lors de l enregistrement de la vente'];
+      this.erreursGenerales = error?.error?.errors || ['Erreur lors de l enregistrement de la vente'];
+      this.errorMsg = this.erreursGenerales;
     });
   }
 }

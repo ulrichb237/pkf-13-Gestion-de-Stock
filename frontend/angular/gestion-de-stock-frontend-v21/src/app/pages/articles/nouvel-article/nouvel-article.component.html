@@ -3,8 +3,8 @@
     <h2>Information de l'article</h2>
   </div>
 
-  <div class="alert alert-danger" *ngIf="errorMsg.length > 0">
-    <div *ngFor="let msg of errorMsg"><span>{{ msg }}</span></div>
+  <div class="alert alert-danger" *ngIf="erreursGenerales.length > 0">
+    <div *ngFor="let msg of erreursGenerales"><span>{{ msg }}</span></div>
   </div>
 
   <div class="card custom-border p-3">
@@ -15,17 +15,36 @@
 
     <form>
       <div class="form-grid-2">
-        <input type="text" class="form-control" name="codearticle" placeholder="Code article" [(ngModel)]="articleDto.codeArticle">
-        <input type="text" class="form-control" name="designation" placeholder="Designation" [(ngModel)]="articleDto.designation">
-        <input type="text" class="form-control tnum" name="prixunitht" placeholder="Prix unitaire HT"
-               (input)="calculerTTC()" [(ngModel)]="articleDto.prixUnitaireHt">
-        <input type="text" class="form-control tnum" name="tauxtva" placeholder="Taux TVA"
-               (input)="calculerTTC()" [(ngModel)]="articleDto.tauxTva">
-        <input type="text" class="form-control tnum" name="prixunitttc" placeholder="Prix unitaire TTC" [(ngModel)]="articleDto.prixUnitaireTtc">
-        <select class="form-control" name="cat" [(ngModel)]="categorieDto.id">
-          <option [value]="null">Selectionner une categorie</option>
-          <option *ngFor="let cat of listeCategorie" [value]="cat.id">{{ cat.code }} - {{ cat.designation }}</option>
-        </select>
+        <div>
+          <input type="text" class="form-control" name="codearticle" placeholder="Code article" [(ngModel)]="articleDto.codeArticle">
+        </div>
+        <div>
+          <input type="text" class="form-control" name="designation" placeholder="Designation" [ngClass]="classeErreur('designation')" [(ngModel)]="articleDto.designation">
+          <div *ngFor="let msg of erreurDe('designation')"><p class="field-error">{{ msg }}</p></div>
+        </div>
+        <div>
+          <input type="text" class="form-control tnum" name="prixunitht" placeholder="Prix unitaire HT"
+                 [ngClass]="classeErreur('prixUnitaireHt')"
+                 (input)="calculerTTC()" [(ngModel)]="articleDto.prixUnitaireHt">
+          <div *ngFor="let msg of erreurDe('prixUnitaireHt')"><p class="field-error">{{ msg }}</p></div>
+        </div>
+        <div>
+          <input type="text" class="form-control tnum" name="tauxtva" placeholder="Taux TVA"
+                 [ngClass]="classeErreur('tauxTva')"
+                 (input)="calculerTTC()" [(ngModel)]="articleDto.tauxTva">
+          <div *ngFor="let msg of erreurDe('tauxTva')"><p class="field-error">{{ msg }}</p></div>
+        </div>
+        <div>
+          <input type="text" class="form-control tnum" name="prixunitttc" placeholder="Prix unitaire TTC" [ngClass]="classeErreur('prixUnitaireTtc')" [(ngModel)]="articleDto.prixUnitaireTtc">
+          <div *ngFor="let msg of erreurDe('prixUnitaireTtc')"><p class="field-error">{{ msg }}</p></div>
+        </div>
+        <div>
+          <select class="form-control" name="cat" [ngClass]="classeErreur('categorie')" [(ngModel)]="categorieDto.id">
+            <option [value]="null">Selectionner une categorie</option>
+            <option *ngFor="let cat of listeCategorie" [value]="cat.id">{{ cat.code }} - {{ cat.designation }}</option>
+          </select>
+          <div *ngFor="let msg of erreurDe('categorie')"><p class="field-error">{{ msg }}</p></div>
+        </div>
       </div>
     </form>
   </div>

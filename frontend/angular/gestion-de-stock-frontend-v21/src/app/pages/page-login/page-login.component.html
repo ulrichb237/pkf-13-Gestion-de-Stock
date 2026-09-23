@@ -8,11 +8,23 @@
 
     <label class="caption" for="login-email">E-mail</label>
     <input id="login-email" type="email" class="form-control" placeholder="E-mail"
+           [class.input-error]="erreurLogin().length > 0"
            [(ngModel)]="authenticationRequest.login" autocomplete="username">
+    @for (msg of erreurLogin(); track $index) {
+      @if (msg.trim()) {
+        <p class="field-error">{{ msg }}</p>
+      }
+    }
 
     <label class="caption" for="login-password">Mot de passe</label>
-    <input id="login-password" type="password" class="form-control" placeholder="Mot de passe"
-           [(ngModel)]="authenticationRequest.password" autocomplete="current-password">
+    <app-champ-mot-de-passe inputId="login-password" [(valeur)]="authenticationRequest.password"
+                            [erreur]="erreurMotDePasse().length > 0"
+                            autocomplete="current-password"></app-champ-mot-de-passe>
+    @for (msg of erreurMotDePasse(); track $index) {
+      @if (msg.trim()) {
+        <p class="field-error">{{ msg }}</p>
+      }
+    }
 
     <button type="button" class="btn btn-primary" (click)="login()">Se connecter</button>
     <p class="text-muted text-center auth-alt">

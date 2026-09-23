@@ -1,11 +1,34 @@
-import { NgIf } from '@angular/common';
+import { NgIf, NgFor, NgClass } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { UtilisateurDto } from '../../../../gs-api/src/models/utilisateur-dto';
+import { AdresseDto } from '../../../../gs-api/src/models/adresse-dto';
 import { UserService } from '../../../services/user/user.service';
 import { NotificationService } from '../../../services/notification/notification.service';
-import { AdresseDto } from '../../../../gs-api/src/models/adresse-dto';
+import { ChampMotDePasseComponent } from '../../../composants/champ-mot-de-passe/champ-mot-de-passe.component';
+
+/** Clefs de champs du formulaire utilisateur (erreurs sous le champ) */
+type ChampsUtilisateur =
+  'nom' | 'prenom' | 'email' | 'dateDeNaissance' | 'motDePasse' |
+  'adresse1' | 'adresse2' | 'ville' | 'codePostale' | 'pays';
+
+/**
+ * Associe un message du backend (UtilisateurValidator / AdresseValidator) au
+ * champ concerne. Ordre important : les libelles les plus specifiques d'abord.
+ */
+const REGLES_CHAMP_UTILISATEUR: Array<{ champ: ChampsUtilisateur; motif: RegExp }> = [
+  { champ: 'motDePasse', motif: /mot de passe/i },
+  { champ: 'dateDeNaissance', motif: /date de naissance/i },
+  { champ: 'email', motif: /e-?mail/i },
+  { champ: 'adresse2', motif: /adresse 2/i },
+  { champ: 'adresse1', motif: /adresse 1/i },
+  { champ: 'ville', motif: /ville/i },
+  { champ: 'codePostale', motif: /code postal/i },
+  { champ: 'pays', motif: /pays/i },
+  { champ: 'prenom', motif: /prenom/i },
+  { champ: 'nom', motif: /nom/i }
+];
 
 /**
  * Creation / fiche utilisateur (admin).
@@ -17,7 +40,7 @@ import { AdresseDto } from '../../../../gs-api/src/models/adresse-dto';
  * naissance est obligatoire (UtilisateurValidator).
  */
 @Component({
-  imports: [NgIf, FormsModule],
+  imports: [NgIf, NgFor, NgClass, FormsModule, ChampMotDePasseComponent],
   selector: 'app-nouvel-utilisateur',
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './nouvel-utilisateur.component.html',
@@ -31,6 +54,11 @@ export class NouvelUtilisateurComponent implements OnInit {
   readonly errorMsg = signal('');
   readonly chargement = signal(false);
   readonly modeEdition = signal(false);
+
+  /** Erreurs rattachees a un champ (affichees sous le champ concerne) */
+  readonly erreursChamps = signal<Partial<Record<ChampsUtilisateur, string[]>>>({});
+  /** Erreurs non rattachees a un champ precis (bandeau general) */
+  readonly erreursGenerales = signal<string[]>([]);
 
   /** Valeur pour l'input date (YYYY-MM-DD) derivee de l'Instant du DTO */
   readonly dateNaissanceInput = computed(() => {
@@ -86,26 +114,60 @@ export class NouvelUtilisateurComponent implements OnInit {
     }));
   }
 
+  /**
+   * Repartit les messages du backend sous le champ concerne.
+   * Un message non reconnu reste dans le bandeau general.
+   */
+  private repartirErreurs(messages: Array<string>): void {
+    const parChamp: Partial<Record<ChampsUtilisateur, string[]>> = {};
+    const generales: string[] = [];
+
+    for (const message of messages) {
+      const regle = REGLES_CHAMP_UTILISATEUR.find(r => r.motif.test(message));
+      if (regle) {
+        (parChamp[regle.champ] ??= []).push(message);
+      } else {
+        generales.push(message);
+      }
+    }
+
+    this.erreursChamps.set(parChamp);
+    this.erreursGenerales.set(generales);
+    this.errorMsg.set(messages.join(' '));
+  }
+
+  /** Erreurs du champ donne, pour le template */
+  erreurDe(champ: ChampsUtilisateur): Array<string> {
+    return this.erreursChamps()[champ] ?? [];
+  }
+
+  /** Classe input-error a appliquer au champ tant que son erreur est affichee */
+  classeErreur(champ: ChampsUtilisateur): Record<string, boolean> {
+    return { 'input-error': this.erreurDe(champ).length > 0 };
+  }
+
   enregistrer(): void {
     this.errorMsg.set('');
+    this.erreursChamps.set({});
+    this.erreursGenerales.set([]);
     const utilisateur = { ...this.utilisateurDto() };
 
     if (!utilisateur.nom || !utilisateur.prenom || !utilisateur.email) {
-      this.errorMsg.set('Le nom, le prenom et l email sont obligatoires');
+      this.repartirErreurs(['Le nom, le prenom et l email sont obligatoires']);
       return;
     }
     if (!utilisateur.dateDeNaissance) {
-      this.errorMsg.set('La date de naissance est obligatoire');
+      this.repartirErreurs(['La date de naissance est obligatoire']);
       return;
     }
 
     if (!this.modeEdition()) {
       if (!this.motDePasse() || this.motDePasse().length < 6) {
-        this.errorMsg.set('Le mot de passe doit contenir au moins 6 caracteres');
+        this.repartirErreurs(['Le mot de passe doit contenir au moins 6 caracteres']);
         return;
       }
       if (this.motDePasse() !== this.confirmMotDePasse()) {
-        this.errorMsg.set('Les mots de passe ne correspondent pas');
+        this.repartirErreurs(['Les mots de passe ne correspondent pas']);
         return;
       }
       utilisateur.moteDePasse = this.motDePasse();
@@ -127,7 +189,10 @@ export class NouvelUtilisateurComponent implements OnInit {
         this.router.navigate(['utilisateurs']);
       }, error => {
         this.chargement.set(false);
-        this.errorMsg.set(error?.error?.message || 'Erreur lors de l enregistrement');
+        const errors = error?.error?.errors;
+        this.repartirErreurs(
+          Array.isArray(errors) && errors.length ? errors : [error?.error?.message || 'Erreur lors de l enregistrement']
+        );
       });
   }
 

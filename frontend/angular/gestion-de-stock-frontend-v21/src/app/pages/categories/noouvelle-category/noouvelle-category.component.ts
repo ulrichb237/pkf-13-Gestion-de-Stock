@@ -1,6 +1,6 @@
 import { NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {CategoryDto} from '../../../../gs-api/src/models/category-dto';
 import {CategoryService} from '../../../services/category/category.service';
@@ -16,6 +16,18 @@ export class NoouvelleCategoryComponent implements OnInit {
 
   categoryDto: CategoryDto = {};
   errorMsg: Array<string> = [];
+  /** Erreurs non rattachees a un champ precis (bandeau general) */
+  erreursGenerales: Array<string> = [];
+
+  /** Erreurs rattachees a un champ precis (affichees sous le champ concerne) */
+  readonly erreurCode = signal<string[]>([]);
+  readonly erreurDesignation = signal<string[]>([]);
+
+  /** Purge les erreurs de champ avant chaque tentative */
+  private purgerErreursChamps(): void {
+    this.erreurCode.set([]);
+    this.erreurDesignation.set([]);
+  }
   constructor(
     private router: Router,
     private activatedRoute: ActivatedRoute,
@@ -37,11 +49,25 @@ export class NoouvelleCategoryComponent implements OnInit {
   }
 
   enregistrerCategory(): void {
+    this.erreursGenerales = [];
+    this.purgerErreursChamps();
+    // Validation locale : CategoryValidator ne rejette rien cote backend,
+    // les champs obligatoires sont donc verifies ici.
+    if (!this.categoryDto.code?.trim()) {
+      this.erreurCode.set(['Veuillez renseigner le code de la categorie']);
+      return;
+    }
+    if (!this.categoryDto.designation?.trim()) {
+      this.erreurDesignation.set(['Veuillez renseigner la description de la categorie']);
+      return;
+    }
     this.categoryService.enregistrerCategory(this.categoryDto)
     .subscribe(res => {
       this.router.navigate(['categories']);
     }, error => {
-      this.errorMsg = error.error.errors;
+      // Les rares erreurs backend ne correspondent a aucun champ : bandeau general.
+      this.erreursGenerales = error?.error?.errors ?? ['Erreur lors de l enregistrement de la categorie'];
+      this.errorMsg = this.erreursGenerales;
     });
   }
 }

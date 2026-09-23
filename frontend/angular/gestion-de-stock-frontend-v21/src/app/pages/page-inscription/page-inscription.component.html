@@ -4,9 +4,9 @@
     <h2>S'inscrire</h2>
     <p class="text-muted">Creez votre entreprise et votre compte administrateur.</p>
 
-    @if (errorsMsg().length > 0) {
+    @if (erreursGenerales().length > 0) {
       <div class="alert alert-danger">
-        @for (msg of errorsMsg(); track $index) {
+        @for (msg of erreursGenerales(); track $index) {
           <div><span>{{ msg }}</span></div>
         }
       </div>
@@ -14,31 +14,91 @@
 
     <h3>Entreprise</h3>
     <div class="form-grid">
-      <input type="text" class="form-control" placeholder="Nom" [(ngModel)]="entrepriseDto.nom">
-      <input type="text" class="form-control" placeholder="Code fiscal" [(ngModel)]="entrepriseDto.codeFiscal">
-      <input type="email" class="form-control" placeholder="E-mail" [(ngModel)]="entrepriseDto.email">
-      <input type="tel" class="form-control" placeholder="Numero de telephone" [(ngModel)]="entrepriseDto.numTel">
+      <div>
+        <input type="text" class="form-control" placeholder="Nom" [ngClass]="classeErreur('nom')" [(ngModel)]="entrepriseDto.nom">
+        @for (msg of erreurDe('nom'); track $index) {
+          <p class="field-error">{{ msg }}</p>
+        }
+      </div>
+      <div>
+        <input type="text" class="form-control" placeholder="Code fiscal" [ngClass]="classeErreur('codeFiscal')" [(ngModel)]="entrepriseDto.codeFiscal">
+        @for (msg of erreurDe('codeFiscal'); track $index) {
+          <p class="field-error">{{ msg }}</p>
+        }
+      </div>
+      <div>
+        <input type="email" class="form-control" placeholder="E-mail" [ngClass]="classeErreur('email')" [(ngModel)]="entrepriseDto.email">
+        @for (msg of erreurDe('email'); track $index) {
+          <p class="field-error">{{ msg }}</p>
+        }
+      </div>
+      <div>
+        <input type="tel" class="form-control" placeholder="Numero de telephone" [ngClass]="classeErreur('numTel')" [(ngModel)]="entrepriseDto.numTel">
+        @for (msg of erreurDe('numTel'); track $index) {
+          <p class="field-error">{{ msg }}</p>
+        }
+      </div>
     </div>
 
     <h3>Adresse</h3>
     <div class="form-grid">
-      <input type="text" class="form-control" placeholder="Adresse 1" [(ngModel)]="adresse.adresse1">
-      <input type="text" class="form-control" placeholder="Adresse 2" [(ngModel)]="adresse.adresse2">
-      <input type="text" class="form-control" placeholder="Ville" [(ngModel)]="adresse.ville">
-      <input type="text" class="form-control" placeholder="Code postal" [(ngModel)]="adresse.codePostale">
-      <input type="text" class="form-control" placeholder="Pays" [(ngModel)]="adresse.pays">
+      <div>
+        <input type="text" class="form-control" placeholder="Adresse 1" [ngClass]="classeErreur('adresse1')" [(ngModel)]="adresse.adresse1">
+        @for (msg of erreurDe('adresse1'); track $index) {
+          <p class="field-error">{{ msg }}</p>
+        }
+      </div>
+      <div>
+        <input type="text" class="form-control" placeholder="Adresse 2" [ngClass]="classeErreur('adresse2')" [(ngModel)]="adresse.adresse2">
+        @for (msg of erreurDe('adresse2'); track $index) {
+          <p class="field-error">{{ msg }}</p>
+        }
+      </div>
+      <div>
+        <input type="text" class="form-control" placeholder="Ville" [ngClass]="classeErreur('ville')" [(ngModel)]="adresse.ville">
+        @for (msg of erreurDe('ville'); track $index) {
+          <p class="field-error">{{ msg }}</p>
+        }
+      </div>
+      <div>
+        <input type="text" class="form-control" placeholder="Code postal" [ngClass]="classeErreur('codePostale')" [(ngModel)]="adresse.codePostale">
+        @for (msg of erreurDe('codePostale'); track $index) {
+          <p class="field-error">{{ msg }}</p>
+        }
+      </div>
+      <div>
+        <input type="text" class="form-control" placeholder="Pays" [ngClass]="classeErreur('pays')" [(ngModel)]="adresse.pays">
+        @for (msg of erreurDe('pays'); track $index) {
+          <p class="field-error">{{ msg }}</p>
+        }
+      </div>
     </div>
 
     <label class="caption" for="description">Description</label>
     <textarea id="description" class="form-control" placeholder="Description" rows="3"
-              [(ngModel)]="entrepriseDto.description"></textarea>
+              [ngClass]="classeErreur('description')" [(ngModel)]="entrepriseDto.description"></textarea>
+    @for (msg of erreurDe('description'); track $index) {
+      <p class="field-error">{{ msg }}</p>
+    }
 
     <h3>Compte administrateur</h3>
     <div class="form-grid">
-      <input id="inscription-password" type="password" class="form-control" placeholder="Mot de passe (6 caracteres minimum)"
-             [(ngModel)]="motDePasse" autocomplete="new-password">
-      <input type="password" class="form-control" placeholder="Confirmer le mot de passe"
-             [(ngModel)]="confirmation" autocomplete="new-password">
+      <div>
+        <app-champ-mot-de-passe inputId="inscription-password" [(valeur)]="motDePasse"
+                                placeholder="Mot de passe (6 caracteres minimum)"
+                                autocomplete="new-password"></app-champ-mot-de-passe>
+        @for (msg of erreurDe('motDePasse'); track $index) {
+          <p class="field-error">{{ msg }}</p>
+        }
+      </div>
+      <div>
+        <app-champ-mot-de-passe inputId="inscription-password-confirm" [(valeur)]="confirmation"
+                                placeholder="Confirmer le mot de passe"
+                                autocomplete="new-password"></app-champ-mot-de-passe>
+        @for (msg of erreurDe('confirmation'); track $index) {
+          <p class="field-error">{{ msg }}</p>
+        }
+      </div>
     </div>
 
     <button type="button" class="btn btn-primary" (click)="inscrire()">S'inscrire</button>

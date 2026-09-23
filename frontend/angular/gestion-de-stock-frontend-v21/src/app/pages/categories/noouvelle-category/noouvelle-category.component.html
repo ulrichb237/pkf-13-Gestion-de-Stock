@@ -3,17 +3,25 @@
     <h2>Nouvelle categorie</h2>
   </div>
 
-  <div class="alert alert-danger" *ngIf="errorMsg.length > 0">
-    <div *ngFor="let msg of errorMsg"><span>{{ msg }}</span></div>
+  <div class="alert alert-danger" *ngIf="erreursGenerales.length > 0">
+    <div *ngFor="let msg of erreursGenerales"><span>{{ msg }}</span></div>
   </div>
 
   <div class="card custom-border p-3">
     <form>
       <label class="caption" for="codeCat">Code</label>
-      <input id="codeCat" type="text" class="form-control" placeholder="Code categorie" name="codeCat" [(ngModel)]="categoryDto.code">
+      <input id="codeCat" type="text" class="form-control" placeholder="Code categorie" name="codeCat"
+             [class.input-error]="erreurCode().length > 0" [(ngModel)]="categoryDto.code">
+      @for (msg of erreurCode(); track $index) {
+        <p class="field-error">{{ msg }}</p>
+      }
 
       <label class="caption" for="designationCat" style="margin-top: var(--sp-md)">Description</label>
-      <input id="designationCat" type="text" class="form-control" placeholder="Description" name="designationCat" [(ngModel)]="categoryDto.designation">
+      <input id="designationCat" type="text" class="form-control" placeholder="Description" name="designationCat"
+             [class.input-error]="erreurDesignation().length > 0" [(ngModel)]="categoryDto.designation">
+      @for (msg of erreurDesignation(); track $index) {
+        <p class="field-error">{{ msg }}</p>
+      }
     </form>
   </div>
 

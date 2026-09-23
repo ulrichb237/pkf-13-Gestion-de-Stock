@@ -9,16 +9,31 @@
     <div class="card custom-border p-3">
       <form>
         <label class="caption" for="ancienmdp">Ancien mot de passe</label>
-        <input id="ancienmdp" type="password" class="form-control" name="ancienmotdepasse"
-               placeholder="Ancien mot de passe" [(ngModel)]="ancienMotDePasse">
+        <app-champ-mot-de-passe inputId="ancienmdp" [(valeur)]="ancienMotDePasse"
+                                placeholder="Ancien mot de passe"
+                                [erreur]="erreurAncien().length > 0"
+                                autocomplete="current-password"></app-champ-mot-de-passe>
+        @for (msg of erreurAncien(); track $index) {
+          <p class="field-error">{{ msg }}</p>
+        }
 
         <label class="caption" for="nouveaumdp" style="margin-top: var(--sp-md)">Nouveau mot de passe</label>
-        <input id="nouveaumdp" type="password" class="form-control" name="nouveaumotdepasse"
-               placeholder="Nouveau mot de passe" [(ngModel)]="changerMotDePasseDto.motDePasse">
+        <app-champ-mot-de-passe inputId="nouveaumdp" [(valeur)]="changerMotDePasseDto.motDePasse"
+                                placeholder="Nouveau mot de passe"
+                                [erreur]="erreurNouveau().length > 0"
+                                autocomplete="new-password"></app-champ-mot-de-passe>
+        @for (msg of erreurNouveau(); track $index) {
+          <p class="field-error">{{ msg }}</p>
+        }
 
         <label class="caption" for="confirmmdp" style="margin-top: var(--sp-md)">Confirmer le mot de passe</label>
-        <input id="confirmmdp" type="password" class="form-control" name="confirmmotdepasse"
-               placeholder="Confirmer mot de passe" [(ngModel)]="changerMotDePasseDto.confirmMotDePasse">
+        <app-champ-mot-de-passe inputId="confirmmdp" [(valeur)]="changerMotDePasseDto.confirmMotDePasse"
+                                placeholder="Confirmer mot de passe"
+                                [erreur]="erreurConfirmation().length > 0"
+                                autocomplete="new-password"></app-champ-mot-de-passe>
+        @for (msg of erreurConfirmation(); track $index) {
+          <p class="field-error">{{ msg }}</p>
+        }
       </form>
 
       <div class="form-actions" style="margin-top: var(--sp-lg)">

@@ -1,0 +1,151 @@
+<div class="landing">
+
+  <!-- === En-tete === -->
+  <header class="landing-header">
+    <span class="landing-logo">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 8l-9-5-9 5v8l9 5 9-5z"/>
+        <path d="M3 8l9 5 9-5"/>
+        <path d="M12 13v9"/>
+      </svg>
+      Gestion de stock
+    </span>
+    <nav class="landing-nav">
+      <a href="#fonctionnalites" class="landing-nav-link">Fonctionnalites</a>
+      <a href="#parcours" class="landing-nav-link">Parcours</a>
+      <a [routerLink]="['/login']" class="landing-nav-link">Se connecter</a>
+    </nav>
+  </header>
+
+  <!-- === Hero === -->
+  <section class="landing-hero">
+    <span class="pill-tag-soft">Nouvelle generation</span>
+    <h1>Gestionnez votre stock,<br>enfin sans friction.</h1>
+    <p class="landing-subtitle">
+      Articles, ventes, commandes et mouvements de stock reunis dans une
+      interface claire. Vos indicateurs, calculs sur vos donnees reelles,
+      toujours a portee de regard.
+    </p>
+    <div class="landing-actions">
+      <a [routerLink]="['/inscrire']" class="btn btn-primary btn-lg">Commencer gratuitement</a>
+      <a [routerLink]="['/login']" class="btn btn-secondary btn-lg">Se connecter</a>
+    </div>
+
+    <!-- Apercu decoratif : mini-maquette du tableau de bord -->
+    <div class="landing-preview" aria-hidden="true">
+      <div class="landing-preview-bar">
+        <span></span><span></span><span></span>
+        <em>Tableau de bord</em>
+      </div>
+      <div class="landing-preview-body">
+        <div class="landing-kpi">
+          <small>Valeur du stock</small>
+          <strong class="tnum">128 450 €</strong>
+          <span class="landing-trend landing-trend-up">+12 %</span>
+        </div>
+        <div class="landing-kpi">
+          <small>CA du mois</small>
+          <strong class="tnum">9 730 €</strong>
+          <span class="landing-trend landing-trend-up">+5 %</span>
+        </div>
+        <div class="landing-kpi landing-kpi-alert">
+          <small>Alertes stock bas</small>
+          <strong class="tnum">3</strong>
+          <span class="landing-trend">references</span>
+        </div>
+        <svg class="landing-spark" viewBox="0 0 280 60" preserveAspectRatio="none">
+          <path d="M0,52 L40,44 L80,46 L120,30 L160,34 L200,18 L240,22 L280,8 L280,60 L0,60 Z"
+                fill="rgba(83,58,253,.14)"/>
+          <path d="M0,52 L40,44 L80,46 L120,30 L160,34 L200,18 L240,22 L280,8"
+                fill="none" stroke="var(--clr-primary)" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- === Fonctionnalites === -->
+  <section id="fonctionnalites" class="landing-section">
+    <h2>Tout le pilotage, au meme endroit</h2>
+    <p class="landing-section-sub">
+      Six modules connectes autour d'un seul catalogue, du premier article
+      a la derniere vente.
+    </p>
+    <div class="landing-grid">
+      @for (f of fonctionnalites; track f.titre) {
+        <article class="landing-card">
+          <span class="landing-card-icon" [attr.data-icone]="f.icone">
+            @switch (f.icone) {
+              @case ('boite') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v9"/>
+                </svg>
+              }
+              @case ('vente') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="9" cy="21" r="1.6"/><circle cx="19" cy="21" r="1.6"/>
+                  <path d="M2 3h3l2.7 12.4a2 2 0 0 0 2 1.6h8.7a2 2 0 0 0 2-1.6L22 7H6"/>
+                </svg>
+              }
+              @case ('commande') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="4" y="3" width="16" height="18" rx="2"/>
+                  <path d="M8 8h8M8 12h8M8 16h5"/>
+                </svg>
+              }
+              @case ('fleches') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M17 3l4 4-4 4M21 7H9"/><path d="M7 21l-4-4 4-4M3 17h12"/>
+                </svg>
+              }
+              @case ('carnet') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M16 21v-2a4 4 0 0 0-8 0v2"/><circle cx="12" cy="7" r="4"/>
+                  <path d="M20 8v6M23 11h-6"/>
+                </svg>
+              }
+              @case ('graphique') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-6"/>
+                </svg>
+              }
+            }
+          </span>
+          <h3>{{ f.titre }}</h3>
+          <p>{{ f.description }}</p>
+        </article>
+      }
+    </div>
+  </section>
+
+  <!-- === Parcours === -->
+  <section id="parcours" class="landing-section landing-parcours">
+    <h2>Pret en trois etapes</h2>
+    <div class="landing-etapes">
+      @for (e of etapes; track e.numero) {
+        <div class="landing-etape">
+          <span class="landing-etape-num tnum">{{ e.numero }}</span>
+          <h3>{{ e.titre }}</h3>
+          <p>{{ e.description }}</p>
+        </div>
+      }
+    </div>
+    <div class="landing-cta-final">
+      <a [routerLink]="['/inscrire']" class="btn btn-primary btn-lg">Creer mon compte</a>
+    </div>
+  </section>
+
+  <!-- === Pied de page === -->
+  <footer class="landing-footer">
+    <span>Gestion de stock — application de demonstration</span>
+    <span class="tnum">© {{ annee }}</span>
+  </footer>
+
+</div>
