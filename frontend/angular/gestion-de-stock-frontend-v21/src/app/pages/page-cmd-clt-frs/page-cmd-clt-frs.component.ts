@@ -1,5 +1,5 @@
 import { NgIf, NgFor } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, OnDestroy, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, input, OnDestroy, OnInit, signal } from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {CmdcltfrsService} from '../../services/cmdcltfrs/cmdcltfrs.service';
 import {CommandeClientDto} from '../../../gs-api/src/models/commande-client-dto';
@@ -35,7 +35,8 @@ type EtatCommande = 'EN_PREPARATION' | 'VALIDEE' | 'LIVREE';
 })
 export class PageCmdCltFrsComponent implements OnInit, OnDestroy {
 
-  origin = '';
+  /** Origine client/fournisseur : recue de la route via withComponentInputBinding */
+  origin = input.required<'client' | 'fournisseur'>();
   /** Etat en signals : ecrits depuis les callbacks HTTP (zoneless-safe) */
   readonly listeCommandes = signal<Array<any>>([]);
   readonly errorMsg = signal('');
@@ -79,7 +80,6 @@ export class PageCmdCltFrsComponent implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
-    private activatedRoute: ActivatedRoute,
     private cmdCltFrsService: CmdcltfrsService,
     private notificationService: NotificationService,
     private cltFrsService: CltfrsService,
@@ -87,9 +87,8 @@ export class PageCmdCltFrsComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    this.activatedRoute.data.subscribe(data => {
-      this.origin = data['origin'];
-    });
+    // L'origine est un input.required lie a la donnee de route via
+    // withComponentInputBinding : disponible des la creation, sans souscription.
     this.findAllCommandes();
   }
 
@@ -98,7 +97,7 @@ export class PageCmdCltFrsComponent implements OnInit, OnDestroy {
 
   findAllCommandes(): void {
     this.errorMsg.set('');
-    if (this.origin === 'client') {
+    if (this.origin() === 'client') {
       this.cmdCltFrsService.findAllCommandesClient()
       .subscribe(cmd => {
         this.listeCommandes.set(cmd || []);
@@ -108,7 +107,7 @@ export class PageCmdCltFrsComponent implements OnInit, OnDestroy {
       }, error => {
         this.errorMsg.set(CmdcltfrsService.errorMsg(error));
       });
-    } else if (this.origin === 'fournisseur') {
+    } else if (this.origin() === 'fournisseur') {
       this.cmdCltFrsService.findAllCommandesFournisseur()
       .subscribe(cmd => {
         this.listeCommandes.set(cmd || []);
@@ -126,12 +125,12 @@ export class PageCmdCltFrsComponent implements OnInit, OnDestroy {
     if (!ligne.id || !idCommande) {
       return;
     }
-    if (this.origin === 'client') {
+    if (this.origin() === 'client') {
       this.cmdCltFrsService.deleteLigneCommandeClient(idCommande, ligne.id)
       .subscribe(() => this.findLignesCommande(idCommande), error => {
         this.errorMsg.set(CmdcltfrsService.errorMsg(error));
       });
-    } else if (this.origin === 'fournisseur') {
+    } else if (this.origin() === 'fournisseur') {
       this.cmdCltFrsService.deleteLigneCommandeFournisseur(idCommande, ligne.id!)
       .subscribe(() => this.findLignesCommande(idCommande), error => {
         this.errorMsg.set(CmdcltfrsService.errorMsg(error));
@@ -180,7 +179,7 @@ export class PageCmdCltFrsComponent implements OnInit, OnDestroy {
     }
     // Typage explicite : les Observable client/fournisseur ont des generiques
     // differents et leur union rend .subscribe() non appelable (TS2349)
-    const requete: Observable<unknown> = this.origin === 'client'
+    const requete: Observable<unknown> = this.origin() === 'client'
       ? this.cmdCltFrsService.updateQuantiteCommandeClient(idCommande, ligne.id, event.quantite)
       : this.cmdCltFrsService.updateQuantiteCommandeFournisseur(idCommande, ligne.id, event.quantite);
     requete.subscribe(() => {
@@ -215,12 +214,12 @@ export class PageCmdCltFrsComponent implements OnInit, OnDestroy {
     if (!id) {
       return;
     }
-    if (this.origin === 'client') {
+    if (this.origin() === 'client') {
       this.cmdCltFrsService.deleteCommandeClient(id)
       .subscribe(() => this.findAllCommandes(), error => {
         this.errorMsg.set(CmdcltfrsService.errorMsg(error));
       });
-    } else if (this.origin === 'fournisseur') {
+    } else if (this.origin() === 'fournisseur') {
       this.cmdCltFrsService.deleteCommandeFournisseur(id)
       .subscribe(() => this.findAllCommandes(), error => {
         this.errorMsg.set(CmdcltfrsService.errorMsg(error));
@@ -243,9 +242,9 @@ export class PageCmdCltFrsComponent implements OnInit, OnDestroy {
   }
 
   nouvelleCommande(): void {
-    if (this.origin === 'client') {
+    if (this.origin() === 'client') {
       this.router.navigate(['nouvellecommandeclt']);
-    } else if (this.origin === 'fournisseur') {
+    } else if (this.origin() === 'fournisseur') {
       this.router.navigate(['nouvellecommandefrs']);
     }
   }
@@ -256,7 +255,7 @@ export class PageCmdCltFrsComponent implements OnInit, OnDestroy {
     }
     this.chargementLignes.update(s => new Set(s).add(idCommande));
     // Typage explicite : union d'Observables non appelable sinon (TS2349)
-    const requete: Observable<Array<any>> = this.origin === 'client'
+    const requete: Observable<Array<any>> = this.origin() === 'client'
       ? this.cmdCltFrsService.findAllLigneCommandesClient(idCommande)
       : this.cmdCltFrsService.findAllLigneCommandesFournisseur(idCommande);
     requete.subscribe(list => {
@@ -315,7 +314,7 @@ export class PageCmdCltFrsComponent implements OnInit, OnDestroy {
     }
     this.changementEtatEnCours.set(true);
     this.commandeEtatMenuOuvert.set(null);
-    if (this.origin === 'client') {
+    if (this.origin() === 'client') {
       this.cmdCltFrsService.updateEtatCommandeClient(cmd.id, nouvelEtat)
       .subscribe(() => this.apresChangementEtat(nouvelEtat), error => {
         this.changementEtatEnCours.set(false);
@@ -352,7 +351,7 @@ export class PageCmdCltFrsComponent implements OnInit, OnDestroy {
     }
     this.rechercheEnCours.set(true);
     this.errorMsg.set('');
-    const requete: Observable<any> = this.origin === 'client'
+    const requete: Observable<any> = this.origin() === 'client'
       ? this.cmdCltFrsService.findCommandeClientByCode(code)
       : this.cmdCltFrsService.findCommandeFournisseurByCode(code);
     requete.subscribe(cmd => {
@@ -377,10 +376,10 @@ export class PageCmdCltFrsComponent implements OnInit, OnDestroy {
       return;
     }
     this.commandeCibleDialog = cmd;
-    this.dialogOuvert.set(this.origin === 'client' ? 'client' : 'fournisseur');
+    this.dialogOuvert.set(this.origin() === 'client' ? 'client' : 'fournisseur');
     this.chargementDialog.set(true);
     this.optionsDialog.set([]);
-    const requete: Observable<Array<ClientDto | FournisseurDto>> = this.origin === 'client'
+    const requete: Observable<Array<ClientDto | FournisseurDto>> = this.origin() === 'client'
       ? this.cltFrsService.findAllClients()
       : this.cltFrsService.findAllFournisseurs();
     requete.subscribe(list => {
@@ -437,7 +436,7 @@ export class PageCmdCltFrsComponent implements OnInit, OnDestroy {
     } else if (this.dialogOuvert() === 'fournisseur') {
       requete = this.cmdCltFrsService.updateFournisseur(idCommande, opt.id);
     } else if (this.dialogOuvert() === 'article' && this.ligneCibleRemplacement?.id) {
-      requete = this.origin === 'client'
+      requete = this.origin() === 'client'
         ? this.cmdCltFrsService.updateArticleCommandeClient(idCommande, this.ligneCibleRemplacement.id, opt.id)
         : this.cmdCltFrsService.updateArticleCommandeFournisseur(idCommande, this.ligneCibleRemplacement!.id, opt.id);
     } else {

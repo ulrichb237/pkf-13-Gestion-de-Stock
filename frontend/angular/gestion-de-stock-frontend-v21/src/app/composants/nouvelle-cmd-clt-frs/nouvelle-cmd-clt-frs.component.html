@@ -1,6 +1,6 @@
 <div class="page">
   <div class="page-header">
-    <h2>Nouvelle commande {{ origin }}</h2>
+    <h2>Nouvelle commande {{ origin() }}</h2>
   </div>
 
   <div class="alert alert-danger" *ngIf="erreursGenerales.length">
@@ -16,7 +16,7 @@
         <div>
           <select class="form-control" name="cltFrs" [(ngModel)]="selectedClientFournisseur"
                   [class.input-error]="erreurClientFrs().length > 0">
-            <option [ngValue]="null" disabled>Selectionner un {{ origin }}</option>
+            <option [ngValue]="null" disabled>Selectionner un {{ origin() }}</option>
             <option *ngFor="let obj of listClientsFournisseurs" [ngValue]="obj">
               {{ obj.nom }}&nbsp;{{ obj.prenom }}
             </option>

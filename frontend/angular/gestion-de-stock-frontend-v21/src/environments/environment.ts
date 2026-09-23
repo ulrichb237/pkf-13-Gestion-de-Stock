@@ -1,9 +1,7 @@
-// This file can be replaced during build by using the `fileReplacements` array.
-// `ng build --prod` replaces `environment.ts` with `environment.prod.ts`.
-// The list of file replacements can be found in `angular.json`.
-
 export const environment = {
-  production: false
+  production: false,
+  // URL du backend ; en dev, le serveur Spring Boot ecoute sur 8081.
+  apiUrl: 'http://localhost:8081'
 };
 
 /*

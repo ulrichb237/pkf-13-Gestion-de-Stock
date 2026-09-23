@@ -29,7 +29,7 @@ export class PageVentesComponent implements OnInit {
   ) { }
 
   nouvelleVente(): void {
-    this.router.navigate(['nouvellevelle']);
+    this.router.navigate(['nouvelle-vente']);
   }
 
   ngOnInit(): void {

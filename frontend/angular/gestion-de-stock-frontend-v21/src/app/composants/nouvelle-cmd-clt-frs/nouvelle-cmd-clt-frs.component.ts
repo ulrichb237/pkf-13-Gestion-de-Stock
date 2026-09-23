@@ -1,6 +1,6 @@
 import { NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {ChangeDetectionStrategy, Component, OnInit, signal} from '@angular/core';
+import {ChangeDetectionStrategy, Component, OnInit, input, signal} from '@angular/core';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {CltfrsService} from '../../services/cltfrs/cltfrs.service';
 import {ArticleDto} from '../../../gs-api/src/models/article-dto';
@@ -21,7 +21,8 @@ import { DetailCmdComponent } from '../detail-cmd/detail-cmd.component';
 })
 export class NouvelleCmdCltFrsComponent implements OnInit {
 
-  origin = '';
+  /** Origine client/fournisseur : recue de la donnee de route via withComponentInputBinding */
+  origin = input.required<'client' | 'fournisseur'>();
   selectedClientFournisseur: any = {};
   listClientsFournisseurs: Array<any> = [];
   searchedArticle: ArticleDto = {};
@@ -59,20 +60,17 @@ export class NouvelleCmdCltFrsComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.activatedRoute.data.subscribe(data => {
-      this.origin = data['origin'];
-    });
     this.findAllClientsFournisseurs();
     this.findAllArticles();
   }
 
   findAllClientsFournisseurs(): void {
-    if (this.origin === 'client') {
+    if (this.origin() === 'client') {
       this.cltFrsService.findAllClients()
       .subscribe(clients => {
         this.listClientsFournisseurs = clients;
       });
-    } else if (this.origin === 'fournisseur' ) {
+    } else if (this.origin() === 'fournisseur' ) {
       this.cltFrsService.findAllFournisseurs()
       .subscribe(fournisseurs => {
         this.listClientsFournisseurs = fournisseurs;
@@ -169,7 +167,7 @@ export class NouvelleCmdCltFrsComponent implements OnInit {
     this.erreursGenerales = [];
     this.purgerErreursChamps();
     if (!this.selectedClientFournisseur?.id) {
-      this.erreurClientFrs.set(['Veuillez selectionner un ' + (this.origin === 'fournisseur' ? 'fournisseur' : 'client')]);
+      this.erreurClientFrs.set(['Veuillez selectionner un ' + (this.origin() === 'fournisseur' ? 'fournisseur' : 'client')]);
       return;
     }
     if (!this.lignesCommande().length) {
@@ -177,7 +175,7 @@ export class NouvelleCmdCltFrsComponent implements OnInit {
       return;
     }
     const commande = this.preparerCommande();
-    if (this.origin === 'client') {
+    if (this.origin() === 'client') {
       this.cmdCltFrsService.enregistrerCommandeClient(commande as CommandeClientDto)
       .subscribe(cmd => {
         this.router.navigate(['commandesclient']);
@@ -185,7 +183,7 @@ export class NouvelleCmdCltFrsComponent implements OnInit {
         this.errorMsg = CmdcltfrsService.errorMsg(error);
         this.erreursGenerales = [this.errorMsg];
       });
-    } else if (this.origin === 'fournisseur') {
+    } else if (this.origin() === 'fournisseur') {
       this.cmdCltFrsService.enregistrerCommandeFournisseur(commande as CommandeFournisseurDto)
       .subscribe(cmd => {
         this.router.navigate(['commandesfournisseur']);
@@ -198,11 +196,11 @@ export class NouvelleCmdCltFrsComponent implements OnInit {
 
   /** Retour vers la liste correspondante (bouton Annuler) */
   get returnUrl(): string {
-    return this.origin === 'fournisseur' ? '/commandesfournisseur' : '/commandesclient';
+    return this.origin() === 'fournisseur' ? '/commandesfournisseur' : '/commandesclient';
   }
 
   private preparerCommande(): any {
-    if (this.origin === 'client') {
+    if (this.origin() === 'client') {
       return  {
         client: this.selectedClientFournisseur,
         code: this.codeCommande,
@@ -212,7 +210,7 @@ export class NouvelleCmdCltFrsComponent implements OnInit {
         etatCommande: 'EN_PREPARATION',
         ligneCommandeClients: this.lignesCommande()
       };
-    } else if (this.origin === 'fournisseur') {
+    } else if (this.origin() === 'fournisseur') {
       return  {
         fournisseur: this.selectedClientFournisseur,
         code: this.codeCommande,

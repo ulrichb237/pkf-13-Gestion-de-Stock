@@ -1,6 +1,6 @@
 import { NgIf, NgFor, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, inject, input, OnInit, Output} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {ClientDto} from '../../../gs-api/src/models/client-dto';
 import {AdresseDto} from '../../../gs-api/src/models/adresse-dto';
@@ -21,7 +21,8 @@ type ChampsCltFrs = 'nom' | 'prenom' | 'mail' | 'numTel' | 'adresse1' | 'adresse
 })
 export class NouveauCltFrsComponent implements OnInit {
 
-  origin = '';
+  /** Origine client/fournisseur : recue de la donnee de route via withComponentInputBinding */
+  origin = input.required<'client' | 'fournisseur'>();
 
   clientFournisseur: any = {};
   adresseDto: AdresseDto = {};
@@ -42,22 +43,19 @@ export class NouveauCltFrsComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.activatedRoute.data.subscribe(data => {
-      this.origin = data['origin'];
-    });
     this.findObject();
   }
 
   findObject(): void {
     const id = this.activatedRoute.snapshot.params['id'];
     if (id) {
-      if (this.origin === 'client') {
+      if (this.origin() === 'client') {
         this.cltFrsService.findClientById(id)
         .subscribe(client => {
           this.clientFournisseur = client;
           this.adresseDto = this.clientFournisseur.adresse;
         });
-      } else if (this.origin === 'fournisseur') {
+      } else if (this.origin() === 'fournisseur') {
         this.cltFrsService.findFournisseurById(id)
         .subscribe(fournisseur => {
           this.clientFournisseur = fournisseur;
@@ -119,14 +117,14 @@ export class NouveauCltFrsComponent implements OnInit {
   enregistrer(): void {
     this.erreursChamps = {};
     this.erreursGenerales = [];
-    if (this.origin === 'client') {
+    if (this.origin() === 'client') {
       this.cltFrsService.enregistrerClient(this.mapToClient())
       .subscribe(client => {
         this.savePhoto(client.id, client.nom);
       }, error => {
         this.repartirErreurs(error?.error?.errors ?? []);
       });
-    } else if (this.origin === 'fournisseur') {
+    } else if (this.origin() === 'fournisseur') {
       this.cltFrsService.enregistrerFournisseur(this.mapToFournisseur())
       .subscribe(fournisseur => {
         this.savePhoto(fournisseur.id, fournisseur.nom);
@@ -137,9 +135,9 @@ export class NouveauCltFrsComponent implements OnInit {
   }
 
   cancelClick(): void {
-    if (this.origin === 'client') {
+    if (this.origin() === 'client') {
       this.router.navigate(['clients']);
-    } else if (this.origin === 'fournisseur') {
+    } else if (this.origin() === 'fournisseur') {
       this.router.navigate(['fournisseurs']);
     }
   }
@@ -177,7 +175,7 @@ export class NouveauCltFrsComponent implements OnInit {
         id: idObject,
         file: this.file,
         title: titre,
-        context: this.origin
+        context: this.origin()
       };
       this.photoService.savePhoto(params)
       .subscribe(res => {

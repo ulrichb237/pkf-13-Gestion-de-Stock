@@ -1,6 +1,6 @@
 <div class="page">
   <div class="page-header">
-    <h1>Commande {{origin}}s</h1>
+    <h1>Commande {{origin()}}s</h1>
     <app-boutton-action
       (clickEvent)="nouvelleCommande()"
     ></app-boutton-action>
@@ -19,7 +19,7 @@
             [attr.aria-expanded]="commandesOuvertes().has(cmd.id)">
       <app-detail-cmd-clt-frs
         [commande]="cmd"
-        [origin]="origin"
+        [origin]="origin()"
       ></app-detail-cmd-clt-frs>
       <span class="spinner-inline" *ngIf="chargementLignes().has(cmd.id)"></span>
     </button>
@@ -30,7 +30,7 @@
         *ngFor="let ligne of mapLignesCommande().get(cmd.id)"
         #ligneRef
         [ligneCommande]="ligne"
-        [origin]="origin"
+        [origin]="origin()"
         [modifiable]="estModifiable(cmd)"
         (suppressionLigne)="supprimerLigneCommande($event)"
         (quantiteModifiee)="enregistrerRefLigne(ligne.id, ligneRef); modifierQuantiteLigne($event)"

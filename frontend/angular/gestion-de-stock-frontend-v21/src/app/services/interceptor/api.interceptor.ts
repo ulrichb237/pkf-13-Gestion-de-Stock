@@ -12,13 +12,14 @@ import { Observable, tap, switchMap, catchError, throwError, finalize } from 'rx
 import { AuthenticationResponse } from '../../../gs-api/src/models/authentication-response';
 import { LoaderService } from '../../composants/loader/service/loader.service';
 import { NotificationService } from '../notification/notification.service';
+import { SessionService } from '../session/session.service';
 
 /**
  * Intercepteur fonctionnel (best practice Angular >= 15, recommandation MCP Angular) :
  * remplace l'ancien HttpInterceptorService (classe + HTTP_INTERCEPTORS DI).
  *
  * Rôles :
- * - injecte le header Authorization: Bearer <accessToken> depuis le localStorage ;
+ * - injecte le header Authorization: Bearer <accessToken> depuis la session ;
  * - sur 401, renouvelle automatiquement la session via le refresh token puis rejoue
  *   la requête (un seul refresh à la fois : les requêtes concurrentes attendent le sien) ;
  * - si le refresh échoue, purge la session locale (déconnexion effective) ;
@@ -29,37 +30,29 @@ import { NotificationService } from '../notification/notification.service';
 /** État partagé du refresh : évite N refresh concurrents sur N 401 simultanés */
 let refreshEnCours: Observable<string> | null = null;
 
-function purgerSession(): void {
-  localStorage.removeItem('accessToken');
-  localStorage.removeItem('connectedUser');
-}
-
-function lancerRefresh(http: HttpClient): Observable<string> {
+function lancerRefresh(http: HttpClient, session: SessionService): Observable<string> {
   if (refreshEnCours) {
     return refreshEnCours;
   }
 
-  let refreshToken: string | undefined;
-  try {
-    const stocke = localStorage.getItem('accessToken');
-    refreshToken = stocke ? (JSON.parse(stocke) as AuthenticationResponse).refreshToken : undefined;
-  } catch {
-    refreshToken = undefined;
-  }
+  const refreshToken = session.lireRefreshToken();
   if (!refreshToken) {
-    purgerSession();
+    session.purger();
     return throwError(() => new Error('no-refresh-token'));
   }
 
+  // URL absolue via SessionService : l'ancien code postait sur "/api/v1/..."
+  // (relatif donc meme origine que le serveur Angular, pas le backend 8081) :
+  // le refresh ne pouvait aboutir qu'en dev avec un proxy, sinon 404 silencieux.
   refreshEnCours = http
-    .post<AuthenticationResponse>('/api/v1/authentification/refresh', { refreshToken })
+    .post<AuthenticationResponse>(`${session.apiUrl}/api/v1/authentification/refresh`, { refreshToken })
     .pipe(
       tap((reponse) => {
-        localStorage.setItem('accessToken', JSON.stringify(reponse));
+        session.remplacerSession(reponse);
       }),
       switchMap((reponse) => {
         if (!reponse?.accessToken) {
-          purgerSession();
+          session.purger();
           return throwError(() => new Error('refresh-failed'));
         }
         return new Observable<string>((abonne) => {
@@ -68,7 +61,7 @@ function lancerRefresh(http: HttpClient): Observable<string> {
         });
       }),
       catchError((erreur) => {
-        purgerSession();
+        session.purger();
         return throwError(() => erreur ?? new Error('refresh-failed'));
       }),
       finalize(() => {
@@ -85,22 +78,20 @@ export const apiInterceptor: HttpInterceptorFn = (
   const loaderService = inject(LoaderService);
   const notificationService = inject(NotificationService);
   const http = inject(HttpClient);
+  const session = inject(SessionService);
 
   loaderService.show();
 
   const isAppelAuth = req.url.includes('/authentification/');
-  const token = localStorage.getItem('accessToken');
+  const token = session.lireAccessToken();
   let authReq = req;
   if (token && !isAppelAuth) {
-    const authenticationResponse: AuthenticationResponse = JSON.parse(token);
-    if (authenticationResponse.accessToken) {
-      authReq = req.clone({
-        setHeaders: { Authorization: `Bearer ${authenticationResponse.accessToken}` }
-      });
-    }
+    authReq = req.clone({
+      setHeaders: { Authorization: `Bearer ${token}` }
+    });
   }
 
-  return traiter(authReq, next, http).pipe(
+  return traiter(authReq, next, http, session).pipe(
     tap({
       next: (event: HttpEvent<unknown>) => {
         if (event instanceof HttpResponse) {
@@ -126,7 +117,8 @@ export const apiInterceptor: HttpInterceptorFn = (
 function traiter(
   req: HttpRequest<unknown>,
   next: HttpHandlerFn,
-  http: HttpClient
+  http: HttpClient,
+  session: SessionService
 ): Observable<HttpEvent<unknown>> {
   return next(req).pipe(
     catchError((erreur: { status?: number }) => {
@@ -134,7 +126,7 @@ function traiter(
       if (erreur?.status !== 401 || isAppelAuth) {
         return throwError(() => erreur);
       }
-      return lancerRefresh(http).pipe(
+      return lancerRefresh(http, session).pipe(
         switchMap((accessToken) => {
           const rejouee = req.clone({
             setHeaders: { Authorization: `Bearer ${accessToken}` }

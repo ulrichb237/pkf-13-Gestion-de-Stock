@@ -8,11 +8,11 @@ import {CategoryService} from '../../../services/category/category.service';
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgIf, NgFor, FormsModule],
-  selector: 'app-noouvelle-category',
-  templateUrl: './noouvelle-category.component.html',
-  styleUrls: ['./noouvelle-category.component.scss']
+  selector: 'app-nouvelle-category',
+  templateUrl: './nouvelle-category.component.html',
+  styleUrls: ['./nouvelle-category.component.scss']
 })
-export class NoouvelleCategoryComponent implements OnInit {
+export class NouvelleCategoryComponent implements OnInit {
 
   categoryDto: CategoryDto = {};
   errorMsg: Array<string> = [];

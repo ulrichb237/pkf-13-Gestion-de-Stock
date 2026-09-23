@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {AuthenticationService} from '../../../gs-api/src/services/authentication.service';
 import {AuthenticationRequest} from '../../../gs-api/src/models/authentication-request';
@@ -7,16 +7,18 @@ import {AuthenticationResponse} from '../../../gs-api/src/models/authentication-
 import {Router} from '@angular/router';
 import {UtilisateursService} from '../../../gs-api/src/services/utilisateurs.service';
 import {UtilisateurDto} from '../../../gs-api/src/models/utilisateur-dto';
-import {retry} from 'rxjs/operators';
 import {ChangerMotDePasseUtilisateurDto} from '../../../gs-api/src/models/changer-mot-de-passe-utilisateur-dto';
 import {RefreshTokenRequest} from '../../../gs-api/src/models/refresh-token-request';
 import {ForgotPasswordResponse} from '../../../gs-api/src/models/forgot-password-response';
+import {SessionService} from '../session/session.service';
 
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
+
+  private readonly session = inject(SessionService);
 
   constructor(
     private http: HttpClient,
@@ -33,7 +35,7 @@ export class UserService {
   /** Echange le refresh token contre un nouveau couple access/refresh (rotation cote backend) */
   refreshSession(): Observable<AuthenticationResponse> {
     const request: RefreshTokenRequest = {
-      refreshToken: this.getRefreshToken()
+      refreshToken: this.session.lireRefreshToken() ?? undefined
     };
     return this.authenticationService.refresh(request);
   }
@@ -41,7 +43,7 @@ export class UserService {
   /** Revoque le refresh token cote backend puis purge le stockage local */
   logout(): void {
     const request: RefreshTokenRequest = {
-      refreshToken: this.getRefreshToken()
+      refreshToken: this.session.lireRefreshToken() ?? undefined
     };
     this.authenticationService.deconnexion(request).subscribe({
       next: () => this.purgerSession(),
@@ -54,21 +56,8 @@ export class UserService {
   }
 
   private purgerSession(): void {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('connectedUser');
+    this.session.purger();
     this.router.navigate(['login']);
-  }
-
-  getRefreshToken(): string | undefined {
-    const stored = localStorage.getItem('accessToken');
-    if (!stored) {
-      return undefined;
-    }
-    try {
-      return (JSON.parse(stored) as AuthenticationResponse).refreshToken;
-    } catch {
-      return undefined;
-    }
   }
 
   /** POST /authentification/mot-de-passe-oublie : demande un code (renvoye dans la reponse, SMTP non configure) */
@@ -115,18 +104,15 @@ export class UserService {
   }
 
   setAccessToken(authenticationResponse: AuthenticationResponse): void {
-    localStorage.setItem('accessToken', JSON.stringify(authenticationResponse));
+    this.session.sauverSession(authenticationResponse);
   }
 
   setConnectedUser(utilisateur: UtilisateurDto): void {
-    localStorage.setItem('connectedUser', JSON.stringify(utilisateur));
+    this.session.sauverUtilisateur(utilisateur);
   }
 
   getConnectedUser(): UtilisateurDto {
-    if (localStorage.getItem('connectedUser')) {
-      return JSON.parse(localStorage.getItem('connectedUser') as string);
-    }
-    return {};
+    return this.session.lireUtilisateur();
   }
 
   changerMotDePasse(changerMotDePasseDto: ChangerMotDePasseUtilisateurDto): Observable<ChangerMotDePasseUtilisateurDto> {
@@ -138,21 +124,6 @@ export class UserService {
    * L'intercepteur renouvelle automatiquement l'access token expire via le refresh token.
    */
   isUserLoggedAndAccessTokenValid(): boolean {
-    const stored = localStorage.getItem('accessToken');
-    if (!stored) {
-      this.router.navigate(['login']);
-      return false;
-    }
-    try {
-      const session = JSON.parse(stored) as AuthenticationResponse;
-      if (!session.accessToken) {
-        this.router.navigate(['login']);
-        return false;
-      }
-      return true;
-    } catch {
-      this.router.navigate(['login']);
-      return false;
-    }
+    return !!this.session.lireAccessToken();
   }
 }
